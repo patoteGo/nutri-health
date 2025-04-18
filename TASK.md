@@ -19,11 +19,11 @@
 - [ ] Build user profile page for bioimpedance data
 - [ ] Placeholder: Bioimpedance device data importer
 - [ ] Integrate Zod for all API/data validation
-- [ ] Write Jest & React Testing Library tests
-  - [ ] Test: expected use
-  - [ ] Test: edge case
-  - [ ] Test: failure case
-- [ ] Create /tests directory and mirror app structure
+- [x] Set up Vitest & React Testing Library tests [2025-04-18]
+  - [x] Test: expected use [2025-04-18]
+  - [x] Test: edge case [2025-04-18]
+  - [x] Test: failure case [2025-04-18]
+- [x] Create /tests directory and mirror app structure [2025-04-18]
 - [ ] Configure CI/CD pipeline on GitHub Actions
 - [ ] Add Vercel deployment config
 
@@ -32,8 +32,15 @@
 - [ ] NextAuth.js configuration
 
 ## Done
+- [x] Set up Vitest & React Testing Library tests [2025-04-18]
+  - [x] Test: expected use [2025-04-18]
+  - [x] Test: edge case [2025-04-18]
+  - [x] Test: failure case [2025-04-18]
+- [x] Create /tests directory and mirror app structure [2025-04-18]
 - [x] Repository scaffolding
 - [x] Basic Next.js & Tailwind installation
 
 ## Discovered During Work
+- [ ] Migrated from jest-dom matchers to Vitest built-in matchers for compatibility.
+- [ ] Updated tests to use getByRole for language switcher buttons to avoid ambiguity with aria-label.
 - [ ] [Add any new TODOs here as development progresses]
