@@ -1,45 +1,36 @@
-# Planning
+# Task Board
 
-## Purpose
-Define a mobile-first, PWA-enabled nutrition app to help individuals and administrators track meals, ingredients, and health metrics over weekly periods, with gamification elements to boost engagement.
+## Backlog
+- [ ] Scaffold Next.js project with PWA & Tailwind
+- [ ] Integrate ShadCN UI components
+- [ ] Set up NextAuth.js with Google login
+- [ ] Configure next-pwa for offline support
+- [ ] Initialize Prisma and create schema (users, meals, ingredients, metrics)
+- [ ] Run Prisma migrations and connect to Postgres
+- [ ] Add Docker Compose for local Postgres
+- [ ] Build CRUD API for meals and ingredients
+- [ ] Implement admin UI for managing meals
+- [ ] Create meal logging UI for users
+- [ ] Calculate calories per meal and suggest alternatives
+- [ ] Add gamification: weekly goals, badges, progress charts
+- [ ] Build user profile page for bioimpedance data
+- [ ] Placeholder: Bioimpedance device data importer
+- [ ] Integrate Zod for all API/data validation
+- [ ] Write Jest & React Testing Library tests
+  - [ ] Test: expected use
+  - [ ] Test: edge case
+  - [ ] Test: failure case
+- [ ] Create /tests directory and mirror app structure
+- [ ] Configure CI/CD pipeline on GitHub Actions
+- [ ] Add Vercel deployment config
 
-## Vision & Scope
-- Allow users to log six meals per day with details
-- Enable admins to manage meals, ingredients, and nutritional data
-- Provide weekly progress reports and gamification
-- Support offline usage on mobile devices
-- Integrate basic bioimpedance metrics input
+## In Progress
+- [ ] Tailwind & ShadCN setup
+- [ ] NextAuth.js configuration
 
-## Architecture
-- **Frontend**: Next.js App Router, Tailwind CSS, ShadCN UI
-- **Backend**: Next.js API routes, Prisma ORM, PostgreSQL
-- **Authentication**: NextAuth.js (Google OAuth)
-- **State Management**: SWR or React Query for data fetching
-- **PWA**: next-pwa for service worker & caching
-- **Testing**: Jest, React Testing Library
+## Done
+- [x] Repository scaffolding
+- [x] Basic Next.js & Tailwind installation
 
-## Constraints
-- Must be mobile-first (target viewport ≤ 480px)
-- Offline support for critical read operations and data entry
-- ShadCN UI components for consistency
-- Secure user session handling
-
-## Tech Stack
-- Next.js
-- Tailwind CSS
-- ShadCN UI
-- NextAuth.js
-- Prisma + PostgreSQL
-- SWR / React Query
-- next-pwa
-- Jest & Testing Library
-- Vercel for deployment
-
-## Tools & Services
-- Git/GitHub
-- PNPM or npm
-- Figma for design mockups
-- Postman for API testing
-- Bioimpedance device data importer (TBD)
-
-## Directory Structure
+## Discovered During Work
+- [ ] [Add any new TODOs here as development progresses]
