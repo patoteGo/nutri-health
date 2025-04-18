@@ -1,36 +1,45 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Nutrition App
 
-## Getting Started
+This repository contains a Next.js PWA nutrition app built with Tailwind CSS and ShadCN components. It helps manage meals, users, and dietary tracking.
 
-First, run the development server:
+## Features
+- **Authentication**: Google Login (OAuth 2.0)
+- **User Sessions**: Secure session management per user
+- **Meals**: Support for 6 meals per day: breakfast, brunch, lunch, afternoon snack, dinner, after dinner
+- **Admin Zone**: Add, edit, and remove meals with images, ingredients, weights, automatic calorie calculation, and alternative suggestions
+- **Gamification**: Weekly goals, badges, and progress tracking to encourage adherence
+- **PWA Support**: Offline functionality and installable as a web app on mobile devices
+- **Bioimpedance Data**: Track weight, fat mass, muscle mass, and other metrics via manual input
+- **Testing**: Jest & React Testing Library coverage for all features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Technologies
+- **Framework**: Next.js (App Router)
+- **Styling**: Tailwind CSS, ShadCN UI
+- **Auth**: NextAuth.js with Google Provider
+- **Database**: Prisma ORM with PostgreSQL (or SQLite for development)
+- **Data Fetching**: SWR or React Query
+- **PWA**: next-pwa
+- **Testing**: Jest, React Testing Library
+- **Deployment**: Vercel (or any Node.js hosting)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Installation
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-org/nutrition-app.git
+   cd nutrition-app
+   ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+2. Install dependencies:
+   ```bash
+   pnpm install
+   ```
 
-## Learn More
+3. Set up environment variables:
+   ```bash
+   cp .env.example .env
+   ```
+   Update the values in the `.env` file with your configuration.
 
-To learn more about Next.js, take a look at the following resources:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+   
