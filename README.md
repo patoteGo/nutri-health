@@ -11,6 +11,7 @@ This repository contains a Next.js PWA nutrition app built with Tailwind CSS and
 - **PWA Support**: Offline functionality and installable as a web app on mobile devices
 - **Bioimpedance Data**: Track weight, fat mass, muscle mass, and other metrics via manual input
 - **Testing**: Vitest & React Testing Library coverage for all features
+- **Breadcrumb Navigation**: Dynamic breadcrumb in the header (using shadcn/ui) reflects the current route for user-friendly navigation. Fully tested.
 
 ## Technologies
 - **Framework**: Next.js (App Router)

@@ -2,6 +2,8 @@
 
 ## Backlog
 
+- [x] Add Breadcrumb in header using shadcn/ui [2025-04-18]
+
 ## Discovered During Work
 - Replace mock data with live data from API when available (people, weeks, meals)
 - Add form submission and validation logic
@@ -40,6 +42,7 @@
 - [ ] NextAuth.js configuration
 
 ## Done
+- [x] Add Breadcrumb in header using shadcn/ui [2025-04-18]
 - [x] Set up Vitest & React Testing Library tests [2025-04-18]
   - [x] Test: expected use [2025-04-18]
   - [x] Test: edge case [2025-04-18]

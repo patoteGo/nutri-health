@@ -16,12 +16,12 @@ export default function LanguageSwitcher() {
         <button
           key={code}
           aria-label={label}
-          className="text-xl p-0.5 focus:outline-none focus:ring-2 focus:ring-primary transition-opacity"
+          className="flex items-center text-xl p-0.5 focus:outline-none focus:ring-primary transition-opacity cursor-pointer"
           onClick={() => i18n.changeLanguage(code)}
           disabled={i18n.language === code}
           style={{ width: 32, height: 32, background: 'none', lineHeight: 1, opacity: i18n.language === code ? 1 : 0.3 }}
         >
-          <span role="img" aria-label={label} className="block w-full h-full text-center select-none">
+          <span role="img" aria-label={label} className="block w-full h-full text-center select-none flex items-center">
             {flag}
           </span>
         </button>
