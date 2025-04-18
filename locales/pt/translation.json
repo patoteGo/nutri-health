@@ -1,0 +1,21 @@
+{
+  "welcome": "Bem-vindo ao NutriHealth!",
+  "login": "Entrar",
+  "logout": "Sair",
+  "profile": "Perfil",
+  "language": "Idioma",
+  "english": "Inglês",
+  "portuguese": "Português",
+  "log_meals": "Registrar refeições de hoje",
+  "log_meal_btn": "Registrar uma refeição",
+  "log_limit": "Você pode registrar até 6 refeições por dia.",
+  "weekly_progress": "Progresso semanal",
+  "week_logged": "4/6 dias registrados nesta semana. Continue assim!",
+  "view_details": "Ver detalhes",
+  "profile_metrics": "Perfil e Métricas",
+  "view_profile": "Ver perfil",
+  "bioimpedance_data": "Dados de Bioimpedância",
+  "admin_panel": "Painel de Admin",
+  "admin_coming": "Acesso Admin (Em breve)",
+  "powered_by": "Desenvolvido com Next.js, V0, ShadCN UI"
+}

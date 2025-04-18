@@ -1,6 +1,9 @@
 # Task Board
 
 ## Backlog
+- [ ] Implement multilingual support (English & Portuguese; default language auto-detected from user device). [Added: 2025-04-18]
+  - [ ] Internationalize all UI strings (discovered during implementation)
+  - [ ] Internationalize all UI strings (discovered during implementation)
 - [ ] Scaffold Next.js project with PWA & Tailwind
 - [ ] Integrate ShadCN UI components
 - [ ] Set up NextAuth.js with Google login

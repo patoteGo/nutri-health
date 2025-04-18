@@ -1,0 +1,21 @@
+{
+  "welcome": "Welcome to NutriHealth!",
+  "login": "Login",
+  "logout": "Logout",
+  "profile": "Profile",
+  "language": "Language",
+  "english": "English",
+  "portuguese": "Portuguese",
+  "log_meals": "Log Today’s Meals",
+  "log_meal_btn": "Log a Meal",
+  "log_limit": "You can log up to 6 meals per day.",
+  "weekly_progress": "Weekly Progress",
+  "week_logged": "4/6 days logged this week. Keep going!",
+  "view_details": "View Details",
+  "profile_metrics": "Profile & Metrics",
+  "view_profile": "View Profile",
+  "bioimpedance_data": "Bioimpedance Data",
+  "admin_panel": "Admin Panel",
+  "admin_coming": "Admin Access (Coming Soon)",
+  "powered_by": "Powered by Next.js, V0, ShadCN UI"
+}
