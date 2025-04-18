@@ -10,7 +10,7 @@ This repository contains a Next.js PWA nutrition app built with Tailwind CSS and
 - **Gamification**: Weekly goals, badges, and progress tracking to encourage adherence
 - **PWA Support**: Offline functionality and installable as a web app on mobile devices
 - **Bioimpedance Data**: Track weight, fat mass, muscle mass, and other metrics via manual input
-- **Testing**: Jest & React Testing Library coverage for all features
+- **Testing**: Vitest & React Testing Library coverage for all features
 
 ## Technologies
 - **Framework**: Next.js (App Router)
@@ -19,7 +19,7 @@ This repository contains a Next.js PWA nutrition app built with Tailwind CSS and
 - **Database**: Prisma ORM with PostgreSQL (or SQLite for development)
 - **Data Fetching**: SWR or React Query
 - **PWA**: next-pwa
-- **Testing**: Jest, React Testing Library
+- **Testing**: Vitest, React Testing Library
 - **Deployment**: Vercel (or any Node.js hosting)
 
 ## Installation
