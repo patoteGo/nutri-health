@@ -31,7 +31,7 @@ export default function Home() {
           <CardContent>
             <div className="flex flex-col gap-2">
               <Button asChild size="lg" className="w-full">
-                <Link href="/meals/log">{t("log_meal_btn", "Log a Meal")}</Link>
+                <Link href="/log-meal">{t("log_meal_btn", "Log a Meal")}</Link>
               </Button>
               <p className="text-xs text-muted-foreground">{t("log_limit", "You can log up to 6 meals per day.")}</p>
             </div>

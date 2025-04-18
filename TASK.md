@@ -1,6 +1,12 @@
 # Task Board
 
 ## Backlog
+
+## Discovered During Work
+- Replace mock data with live data from API when available (people, weeks, meals)
+- Add form submission and validation logic
+- Add loading/skeleton states for selectors if data is async
+
 - [ ] Implement multilingual support (English & Portuguese; default language auto-detected from user device). [Added: 2025-04-18]
   - [ ] Internationalize all UI strings (discovered during implementation)
   - [ ] Internationalize all UI strings (discovered during implementation)
@@ -13,7 +19,9 @@
 - [ ] Add Docker Compose for local Postgres
 - [ ] Build CRUD API for meals and ingredients
 - [ ] Implement admin UI for managing meals
-- [ ] Create meal logging UI for users
+- [x] Log a Meal: UI & Mocks (choose meal, select person, add meal parts: name, grams, photo; mock data only) [2025-04-18]
+  - [x] Log a Meal: UI selectors page (person, meal, week, option) [2025-04-18]
+- [ ] Log a Meal: Backend & Auth Integration (persist meal, associate with user, secure endpoints) [2025-04-18]
 - [ ] Calculate calories per meal and suggest alternatives
 - [ ] Add gamification: weekly goals, badges, progress charts
 - [ ] Build user profile page for bioimpedance data
