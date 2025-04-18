@@ -17,5 +17,20 @@
   "bioimpedance_data": "Bioimpedance Data",
   "admin_panel": "Admin Panel",
   "admin_coming": "Admin Access (Coming Soon)",
-  "powered_by": "Powered by Next.js, V0, ShadCN UI"
+  "powered_by": "Powered by Next.js, V0, ShadCN UI",
+  "log_meal_title": "Log a Meal",
+  "select_person": "Select Person",
+  "choose_person": "Choose a person",
+  "select_meal": "Select Meal",
+  "choose_meal": "Choose a meal",
+  "meal_breakfast": "Breakfast",
+  "meal_snack1": "Snack 1",
+  "meal_lunch": "Lunch",
+  "meal_snack2": "Snack 2",
+  "meal_dinner": "Dinner",
+  "meal_supper": "Supper",
+  "select_week": "Select Week",
+  "choose_week": "Choose a week",
+  "meal_option": "Meal Option",
+  "choose_option": "Choose option"
 }

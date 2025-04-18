@@ -1,6 +1,8 @@
+// LanguageSwitcher is now globally available via Header (layout.tsx)
 "use client";
 import React from "react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import clsx from "clsx";
 
@@ -39,6 +41,8 @@ function getWeekOptions() {
 
 export default function LogMealPage() {
   // # Reason: Initialize with empty string for controlled components to avoid uncontrolled->controlled warning.
+  // # i18n: All UI strings use t('key', 'Fallback') for translation.
+  const { t } = useTranslation();
   const [person, setPerson] = useState<string>('');
   const [meal, setMeal] = useState<string>('');
   const [week, setWeek] = useState<string>('');
@@ -49,14 +53,14 @@ export default function LogMealPage() {
 
   return (
     <main className="max-w-md mx-auto p-4 flex flex-col gap-6">
-      <h1 className="text-2xl font-bold mb-4">Log a Meal</h1>
+      <h1 className="text-2xl font-bold mb-4">{t('log_meal_title', 'Log a Meal')}</h1>
 
       {/* Select Person */}
       <div>
-        <label className="block mb-1 text-sm font-medium">Select Person</label>
+        <label className="block mb-1 text-sm font-medium">{t('select_person', 'Select Person')}</label>
         <Select value={person} onValueChange={setPerson}>
           <SelectTrigger className="w-full">
-            <SelectValue placeholder="Choose a person" />
+            <SelectValue placeholder={t('choose_person', 'Choose a person')} />
           </SelectTrigger>
           <SelectContent>
             {people.map((p) => (
@@ -68,14 +72,14 @@ export default function LogMealPage() {
 
       {/* Select Meal */}
       <div>
-        <label className="block mb-1 text-sm font-medium">Select Meal</label>
+        <label className="block mb-1 text-sm font-medium">{t('select_meal', 'Select Meal')}</label>
         <Select value={meal} onValueChange={setMeal}>
           <SelectTrigger className="w-full">
-            <SelectValue placeholder="Choose a meal" />
+            <SelectValue placeholder={t('choose_meal', 'Choose a meal')} />
           </SelectTrigger>
           <SelectContent>
             {meals.map((m) => (
-              <SelectItem key={m.id} value={m.id}>{m.label}</SelectItem>
+              <SelectItem key={m.id} value={m.id}>{t(`meal_${m.id}`, m.label)}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -83,10 +87,10 @@ export default function LogMealPage() {
 
       {/* Select Week */}
       <div>
-        <label className="block mb-1 text-sm font-medium">Select Week</label>
+        <label className="block mb-1 text-sm font-medium">{t('select_week', 'Select Week')}</label>
         <Select value={week} onValueChange={setWeek}>
           <SelectTrigger className="w-full">
-            <SelectValue placeholder="Choose week" />
+            <SelectValue placeholder={t('choose_week', 'Choose a week')} />
           </SelectTrigger>
           <SelectContent>
             {weekOptions.map((w) => (
@@ -96,13 +100,13 @@ export default function LogMealPage() {
         </Select>
       </div>
 
-      {/* Select Meal Option */}
+      {/* Meal Option */}
       <div>
-        <label className="block mb-1 text-sm font-medium">Meal Option</label>
+        <label className="block mb-1 text-sm font-medium">{t('meal_option', 'Meal Option')}</label>
         {/* # Reason: Ensure value passed is always string or empty string */}
         <Select value={option?.toString() ?? ''} onValueChange={(v) => setOption(Number(v))}>
           <SelectTrigger className="w-full">
-            <SelectValue placeholder="Choose option" />
+            <SelectValue placeholder={t('choose_option', 'Choose option')} />
           </SelectTrigger>
           <SelectContent>
             {mealOptions.map((o) => (

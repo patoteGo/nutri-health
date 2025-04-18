@@ -17,5 +17,20 @@
   "bioimpedance_data": "Dados de Bioimpedância",
   "admin_panel": "Painel de Admin",
   "admin_coming": "Acesso Admin (Em breve)",
-  "powered_by": "Desenvolvido com Next.js, V0, ShadCN UI"
+  "powered_by": "Desenvolvido com Next.js, V0, ShadCN UI",
+  "log_meal_title": "Registrar uma Refeição",
+  "select_person": "Selecionar Pessoa",
+  "choose_person": "Escolha uma pessoa",
+  "select_meal": "Selecionar Refeição",
+  "choose_meal": "Escolha uma refeição",
+  "meal_breakfast": "Café da manhã",
+  "meal_snack1": "Lanche 1",
+  "meal_lunch": "Almoço",
+  "meal_snack2": "Lanche 2",
+  "meal_dinner": "Jantar",
+  "meal_supper": "Ceia",
+  "select_week": "Selecionar Semana",
+  "choose_week": "Escolha uma semana",
+  "meal_option": "Opção de Refeição",
+  "choose_option": "Escolha a opção"
 }

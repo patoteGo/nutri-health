@@ -5,23 +5,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
-import LanguageSwitcher from "../components/LanguageSwitcher";
-
-// Main dashboard page for Nutri-Health App
-import LanguageProvider from "../components/LanguageProvider";
+// LanguageProvider and LanguageSwitcher are now provided globally in layout.tsx
 
 export default function Home() {
   const { t } = useTranslation(); // Reason: Enables translations for all UI strings
   return (
-    <LanguageProvider>
-      <div className="min-h-screen bg-background flex flex-col items-center px-2 py-4 sm:px-4">
-        <div className="w-full flex justify-end max-w-md mb-2">
-          <LanguageSwitcher />
-        </div>
-        <header className="w-full max-w-md mx-auto py-2 flex flex-col items-center">
-          <h1 className="text-2xl font-bold tracking-tight mb-2">Nutri-Health</h1>
-          <p className="text-sm text-muted-foreground mb-4 text-center">{t("welcome")}</p>
-        </header>
+    <div className="min-h-screen bg-background flex flex-col items-center px-2 py-4 sm:px-4">
+      {/* LanguageSwitcher is now in Header (global) */}
+      <header className="w-full max-w-md mx-auto py-2 flex flex-col items-center">
+        <h1 className="text-2xl font-bold tracking-tight mb-2">Nutri-Health</h1>
+        <p className="text-sm text-muted-foreground mb-4 text-center">{t("welcome")}</p>
+      </header>
       <main className="flex flex-col gap-6 w-full max-w-md">
         {/* Meal Logging Card */}
         <Card>
@@ -80,6 +74,5 @@ export default function Home() {
           Nutri-Health &copy; {new Date().getFullYear()} &mdash; {t("powered_by", "Powered by Next.js, V0, ShadCN UI")}
         </footer>
       </div>
-    </LanguageProvider>
   );
 }

@@ -9,8 +9,9 @@ const LANGS = [
 
 export default function LanguageSwitcher() {
   const { i18n } = useTranslation();
+  // Added data-testid for robust test querying
   return (
-    <div className="flex gap-1 items-center">
+    <div className="flex gap-1 items-center" data-testid="language-switcher">
       {LANGS.map(({ code, flag, label }) => (
         <button
           key={code}

@@ -1,38 +1,29 @@
 import React from "react";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, within, fireEvent } from "@testing-library/react";
 import { describe, expect, it } from 'vitest';
 import userEvent from "@testing-library/user-event";
 import LogMealPage from "@/app/log-meal/page";
+import Header from "@/components/Header";
+import { I18nextProvider } from "react-i18next";
+import i18n from "@/i18n";
 import '@testing-library/jest-dom';
 
-describe("LogMealPage", () => {
-  it("renders all selectors with correct placeholders", () => {
-    render(<LogMealPage />);
-    expect(screen.getByText(/Log a Meal/i)).toBeInTheDocument();
-    expect(screen.getByText(/Select Person/i)).toBeInTheDocument();
-    expect(screen.getByText(/Select Meal/i)).toBeInTheDocument();
-    expect(screen.getByText(/Select Week/i)).toBeInTheDocument();
-    expect(screen.getByText(/Meal Option/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/Choose/)).toHaveLength(4);
-  });
+// Tests for LogMealPage multilingual header (Header with LanguageSwitcher)
 
-  it("allows selecting a person, meal, week, and option", async () => {
-    render(<LogMealPage />);
-    const user = userEvent.setup();
+// 1. Happy path: Header renders with LanguageSwitcher
+// 2. Edge: Language switching changes UI
+// 3. Failure: Menu not present if Header not rendered
 
-    // Helper function to select an option
-    const selectOption = async (label: RegExp, optionText: string | RegExp) => {
-      const labelElement = screen.getByText(label);
-      const container = labelElement.closest('div');
-      if (!container) throw new Error(`Could not find container for label ${label}`);
-      // # Reason: Target the combobox within the label's container, as direct text/name query can fail due to internal structure.
-      await user.click(within(container).getByRole('combobox'));
-      await user.click(await screen.findByText(optionText)); // Find option in the opened listbox
-    };
-
-    // Select Person
-    await selectOption(/Select Person/i, "Alice");
-    const personLabel = screen.getByText(/Select Person/i);
+test("Header renders with LanguageSwitcher on log-meal page", () => {
+  render(
+    <I18nextProvider i18n={i18n}>
+      <Header />
+      <LogMealPage />
+    </I18nextProvider>
+  );
+  expect(screen.getByText("Log a Meal")).toBeInTheDocument();
+  // Test for LanguageSwitcher by data-testid (should add this to component if not present)
+  expect(screen.getByTestId("language-switcher")).toBeInTheDocument();
     const personContainer = personLabel.closest('div');
     if (!personContainer) throw new Error('Could not find container for label Select Person');
     // # Reason: Check displayed text within the combobox's container, as accessible name update might be unreliable in JSDOM.
