@@ -23,6 +23,7 @@
 - [ ] Implement admin UI for managing meals
 - [x] Log a Meal: UI & Mocks (choose meal, select person, add meal parts: name, grams, photo; mock data only) [2025-04-18]
   - [x] Log a Meal: UI selectors page (person, meal, week, option) [2025-04-18]
+  - [ ] Log a Meal: Add meal parts list UI (dynamic rows: name, grams, image, add button) using shadcn/ui in /app/log-meal/page.tsx [2025-04-18]
 - [ ] Log a Meal: Backend & Auth Integration (persist meal, associate with user, secure endpoints) [2025-04-18]
 - [ ] Calculate calories per meal and suggest alternatives
 - [ ] Add gamification: weekly goals, badges, progress charts

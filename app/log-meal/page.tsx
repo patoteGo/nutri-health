@@ -1,9 +1,10 @@
 // LanguageSwitcher is now globally available via Header (layout.tsx)
 "use client";
 import React from "react";
-import { useState } from "react";
+import { useState, ChangeEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import clsx from "clsx";
 
 // Mock data for selectors (replace with real data fetching later)
@@ -115,6 +116,106 @@ export default function LogMealPage() {
           </SelectContent>
         </Select>
       </div>
+
+      {/* Meal Parts List */}
+      <div>
+        <label className="block mb-2 text-lg font-semibold">{t('meal_parts', 'Meal Parts')}</label>
+        <MealPartsList />
+      </div>
     </main>
+  );
+}
+
+// --- MealPartsList Component ---
+type MealPart = {
+  name: string;
+  grams: string;
+  image?: File;
+  imageUrl?: string;
+};
+
+function MealPartsList() {
+  const { t } = useTranslation();
+  const [parts, setParts] = useState<MealPart[]>([
+    { name: '', grams: '', image: undefined, imageUrl: undefined },
+  ]);
+
+  // Handle input changes for name/grams
+  const handleChange = (idx: number, field: keyof MealPart, value: string | File) => {
+    setParts((prev) =>
+      prev.map((part, i) => {
+        if (i !== idx) return part;
+        if (field === 'image' && value instanceof File) {
+          return { ...part, image: value, imageUrl: URL.createObjectURL(value) };
+        }
+        return { ...part, [field]: value };
+      })
+    );
+  };
+
+  // Add a new meal part row
+  const addRow = () => {
+    setParts((prev) => [...prev, { name: '', grams: '', image: undefined, imageUrl: undefined }]);
+  };
+
+  return (
+    <div className="flex flex-col gap-4">
+      {parts.map((part, idx) => (
+        <div key={idx} className="flex gap-2 items-center bg-card rounded-md p-2 shadow-xs">
+          {/* Name Input */}
+          <div className="flex-1">
+            <label className="block text-xs mb-1">{t('food_name', 'Name')}</label>
+            <Input
+              type="text"
+              value={part.name}
+              onChange={(e) => handleChange(idx, 'name', e.target.value)}
+              placeholder={t('food_name_ph', 'e.g. Chicken Breast')}
+              aria-label={t('food_name', 'Name')}
+            />
+          </div>
+          {/* Grams Input */}
+          <div className="w-24">
+            <label className="block text-xs mb-1">{t('grams', 'Grams')}</label>
+            <Input
+              type="number"
+              min={0}
+              value={part.grams}
+              onChange={(e) => handleChange(idx, 'grams', e.target.value)}
+              placeholder={t('grams_ph', 'g')}
+              aria-label={t('grams', 'Grams')}
+            />
+          </div>
+          {/* Image Input */}
+          <div className="flex flex-col items-center">
+            <label className="block text-xs mb-1">{t('image', 'Image')}</label>
+            <Input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                if (e.target.files && e.target.files[0]) {
+                  handleChange(idx, 'image', e.target.files[0]);
+                }
+              }}
+              aria-label={t('image', 'Image')}
+            />
+            {part.imageUrl && (
+              <img
+                src={part.imageUrl}
+                alt={t('preview', 'Preview')}
+                className="mt-1 w-12 h-12 object-cover rounded"
+              />
+            )}
+          </div>
+        </div>
+      ))}
+      <button
+        type="button"
+        className="mt-2 px-4 py-2 rounded bg-primary text-primary-foreground hover:bg-primary/90 transition"
+        onClick={addRow}
+        data-testid="add-meal-part"
+      >
+        {t('add_meal_part', 'Add Meal Part')}
+      </button>
+    </div>
   );
 }
