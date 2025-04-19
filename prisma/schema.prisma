@@ -1,0 +1,51 @@
+// Prisma schema for Nutri-Health
+// Models: User (with isAdmin), Meal, WeeklyMealPlan
+// Postgres database
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  isAdmin   Boolean  @default(false)
+  meals     Meal[]
+  weeklyPlans WeeklyMealPlan[]
+}
+
+model Meal {
+  id          String   @id @default(uuid())
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String
+  date        DateTime
+  moment      MealMoment
+  parts       Json     // Array of meal parts: [{ name, grams, imageUrl }]
+}
+
+enum MealMoment {
+  BREAKFAST
+  SNACK1
+  LUNCH
+  SNACK2
+  DINNER
+  SUPPER
+}
+
+model WeeklyMealPlan {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  weekStart DateTime // Monday of the week
+  meals     Json     // { [day: string]: { [moment: string]: MealData } }
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// MealData: { parts: [{ name, grams, imageUrl }] }

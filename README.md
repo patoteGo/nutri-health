@@ -1,6 +1,88 @@
-# Nutrition App
+# Nutri Health
 
-This repository contains a Next.js PWA nutrition app built with Tailwind CSS and ShadCN components. It helps manage meals, users, and dietary tracking.
+## Local Development Setup
+
+### 1. Install dependencies
+
+```sh
+pnpm install
+```
+
+### 2. Start Postgres with Docker Compose
+
+```sh
+pnpm dlx docker-compose up -d
+```
+
+### 3. Configure Environment Variables
+
+Create a `.env` file in the project root with:
+
+```
+DATABASE_URL=postgresql://nutrihealth:nutrihealth@localhost:5432/nutrihealth
+```
+
+Also, set up `.env.local` for NextAuth and Google OAuth:
+
+```
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your-random-secret
+```
+
+### 4. Run Database Migrations
+
+```sh
+pnpm exec prisma migrate dev --name init
+```
+
+### 5. Seed the Database (Creates Admin User)
+
+```sh
+pnpm seed
+```
+
+This will create an admin user:
+- **Email:** admin@nutrihealth.local
+- **Name:** Admin
+- **isAdmin:** true
+
+### 6. Start the Development Server
+
+```sh
+pnpm dev
+```
+
+App will be available at [http://localhost:3000](http://localhost:3000)
+
+---
+
+## Admin Access
+
+- Use Google OAuth to sign in.
+- To access the admin dashboard, log in with the Google account matching `admin@nutrihealth.local` (ensure your Google account email matches this or update the seed script/email as needed).
+- Only users with `isAdmin: true` can access `/admin` routes.
+
+---
+
+## Project Structure & Tech
+- Next.js (App Router)
+- Prisma ORM + PostgreSQL (Docker)
+- NextAuth.js (Google OAuth)
+- Tailwind CSS, ShadCN UI
+- Zod for validation
+- React Query
+- PWA support
+
+---
+
+## Troubleshooting
+- If migrations fail with `DATABASE_URL` errors, ensure `.env` exists and is correct.
+- To reset the database: `docker compose down -v && docker compose up -d && pnpm exec prisma migrate reset`
+- For more, see [PLANNING.md](./PLANNING.md)
+
+---
 
 ## Features
 - **Authentication**: Google Login (OAuth 2.0)

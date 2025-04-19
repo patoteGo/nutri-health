@@ -40,6 +40,7 @@
 - [ ] Add Vercel deployment config
 
 ## In Progress
+- [ ] Admin Dashboard: Add/Edit weekly meals for each person (six meal moments per day, full week, authentication required) [2025-04-19]
 - [ ] Tailwind & ShadCN setup
 - [ ] NextAuth.js configuration
 

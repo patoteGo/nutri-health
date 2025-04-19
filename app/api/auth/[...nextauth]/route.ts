@@ -10,8 +10,10 @@ const getRequiredEnvVar = (varName: string): string => {
   return value;
 };
 
-// Configure NextAuth (App Router style)
-const handler = NextAuth({
+import type { NextAuthOptions } from "next-auth";
+
+// --- Extract config as authOptions ---
+export const authOptions: NextAuthOptions = {
   providers: [
     Google({
       clientId: getRequiredEnvVar("GOOGLE_CLIENT_ID"),
@@ -33,7 +35,9 @@ const handler = NextAuth({
       return token;
     },
   },
-});
+};
+
+const handler = NextAuth(authOptions);
 
 export const GET = handler;
 export const POST = handler;
