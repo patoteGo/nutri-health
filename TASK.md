@@ -3,6 +3,7 @@
 ## Backlog
 
 - [x] Add Breadcrumb in header using shadcn/ui [2025-04-18]
+- [x] Add PWA support using next-pwa, manifest, service worker, and offline installability [2025-04-19]
 
 ## Discovered During Work
 - Replace mock data with live data from API when available (people, weeks, meals)

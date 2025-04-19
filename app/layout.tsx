@@ -16,10 +16,14 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Nutri Health",
   description: "Track your meals and nutrition.",
-  // Use SVG food icon as favicon
-  icons: {
-    icon: "/favicon.svg",
-  },
+  icons: [
+    { rel: "icon", url: "/fruit-icon.svg" },
+    { rel: "apple-touch-icon", url: "/apple-touch-icon.png" },
+    { rel: "icon", type: "image/png", sizes: "192x192", url: "/android-chrome-192x192.png" },
+    { rel: "icon", type: "image/png", sizes: "512x512", url: "/android-chrome-512x512.png" },
+    { rel: "icon", type: "image/x-icon", sizes: "32x32 16x16", url: "/favicon.ico" },
+    { rel: "mask-icon", url: "/fruit-icon.svg" },
+  ],
 };
 
 
