@@ -33,7 +33,7 @@ const Header: React.FC = () => {
   const { data: session, status } = useSession(); // Get session info
 
   return (
-    <header className="w-full flex justify-between gap-2 max-w-md mx-auto py-3 items-center">
+    <header className="w-full flex justify-between gap-2 max-w-md mx-auto py-3 px-4 sm:px-6 items-center">
       {/* Breadcrumb Navigation */}
       <Breadcrumb>
         <BreadcrumbList>
