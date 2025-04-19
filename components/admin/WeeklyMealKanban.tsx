@@ -10,6 +10,8 @@ import {
 import { z } from "zod";
 import { mealMoments } from "@/lib/weekUtils";
 import { Card } from "../ui/card";
+import { useDroppable } from "@dnd-kit/core";
+import DraggableMenuCard from "./DraggableMenuCard";
 import { WeeklyMealPlanSchema, MealMoment } from "@/lib/types";
 
 // --- Zod Menu Schema ---
@@ -21,7 +23,10 @@ const MenuSchema = z.object({
   ingredients: z.array(z.any()), // Simplified for now
 });
 
-export type Menu = z.infer<typeof MenuSchema>;
+export type Menu = z.infer<typeof MenuSchema> & {
+  assignedDay?: string;
+  assignedMoment?: string;
+};
 
 // --- Props ---
 interface WeeklyMealKanbanProps {
@@ -60,26 +65,53 @@ function getMealLabel(meal: string) {
   }
 }
 
+// --- Droppable Meal Slot ---
+interface DroppableMealSlotProps {
+  day: string;
+  mealMoment: string;
+  menus: Menu[];
+  onDropMenu: (menuId: string, fromDay: string, fromMoment: string) => void;
+}
+
+const DroppableMealSlot: React.FC<DroppableMealSlotProps> = ({ day, mealMoment, menus, onDropMenu }) => {
+  const { setNodeRef, isOver } = useDroppable({
+    id: `${day}|${mealMoment}`,
+    data: { day, mealMoment },
+  });
+  return (
+    <div
+      ref={setNodeRef}
+      className={`flex flex-col gap-2 px-3 pb-3 min-h-[30px] transition-all rounded-md ${isOver ? "ring-2 ring-primary/70 bg-primary/5" : ""}`}
+    >
+      {menus.length === 0 ? (
+        <span className="text-xs text-muted-foreground opacity-60 italic select-none">Empty</span>
+      ) : (
+        menus.map((menu) => (
+          <DraggableMenuCard key={menu.id} menu={menu} day={day} mealMoment={mealMoment} />
+        ))
+      )}
+    </div>
+  );
+};
+
 // --- Main Kanban Component ---
 const WeeklyMealKanban: React.FC<WeeklyMealKanbanProps> = ({ menus, weekStart, onMenusChange }) => {
   // --- State: Track menu placement per day/meal ---
   // Structure: { [dayIndex]: { [mealMoment]: Menu[] } }
+  // Build board from menus with assignedDay/assignedMoment
   const [board, setBoard] = React.useState(() => {
     const initial: Record<string, Record<string, Menu[]>> = {};
-    weekDays.forEach((day, dIdx) => {
+    weekDays.forEach((day) => {
       initial[day] = {};
       mealMoments.forEach((moment) => {
         initial[day][moment] = [];
       });
     });
-    // Place existing menus (if any) into correct slot
     menus.forEach((menu) => {
-      // Assume menu has day and category (mealMoment)
-      // For demo, randomly assign to first day
-      const day = weekDays[0];
-      const moment = menu.category.toUpperCase();
-      if (initial[day][moment]) {
-        initial[day][moment].push(menu);
+      if (menu.assignedDay && menu.assignedMoment) {
+        if (initial[menu.assignedDay] && initial[menu.assignedDay][menu.assignedMoment]) {
+          initial[menu.assignedDay][menu.assignedMoment].push(menu);
+        }
       }
     });
     return initial;
@@ -87,9 +119,42 @@ const WeeklyMealKanban: React.FC<WeeklyMealKanbanProps> = ({ menus, weekStart, o
 
   // --- Drag/Drop Handlers ---
   function handleDragEnd(event: DragEndEvent) {
-    // # Reason: Only allow drop if meal type matches
-    // TODO: Implement logic to move menu between columns/rows
-    // For now, do nothing
+    const { active, over } = event;
+    if (!active || !over) return;
+    // Parse IDs
+    const [menuId, fromDay, fromMoment] = active.id.toString().split("|");
+    // If dropped over Menus list (unassigned), over.id === 'unassigned'
+    if (over.id === 'unassigned') {
+      // Remove assignment
+      const menu = menus.find(m => m.id === menuId);
+      if (!menu) return;
+      const newMenus = menus.map(m => m.id === menuId ? { ...m, assignedDay: undefined, assignedMoment: undefined } : m);
+      onMenusChange(newMenus);
+      setBoard(prev => {
+        const newBoard = JSON.parse(JSON.stringify(prev));
+        if (menu.assignedDay && menu.assignedMoment) {
+          newBoard[menu.assignedDay][menu.assignedMoment] = newBoard[menu.assignedDay][menu.assignedMoment].filter(m => m.id !== menuId);
+        }
+        return newBoard;
+      });
+      return;
+    }
+    const [toDay, toMoment] = over.id.toString().split("|");
+    // Only allow drop if mealMoment matches menu's category
+    const menu = menus.find(m => m.id === menuId);
+    if (!menu || menu.category.toUpperCase() !== toMoment) return;
+    if (menu.assignedDay === toDay && menu.assignedMoment === toMoment) return;
+    // Update assignment
+    const newMenus = menus.map(m => m.id === menuId ? { ...m, assignedDay: toDay, assignedMoment: toMoment } : m);
+    onMenusChange(newMenus);
+    setBoard(prev => {
+      const newBoard = JSON.parse(JSON.stringify(prev));
+      if (menu.assignedDay && menu.assignedMoment) {
+        newBoard[menu.assignedDay][menu.assignedMoment] = newBoard[menu.assignedDay][menu.assignedMoment].filter(m => m.id !== menuId);
+      }
+      newBoard[toDay][toMoment].push({ ...menu, assignedDay: toDay, assignedMoment: toMoment });
+      return newBoard;
+    });
   }
 
   return (
@@ -111,17 +176,25 @@ const WeeklyMealKanban: React.FC<WeeklyMealKanbanProps> = ({ menus, weekStart, o
                       items={board[day][moment].map((m) => m.id)}
                       strategy={verticalListSortingStrategy}
                     >
-                      <div className="flex flex-col gap-2 px-3 pb-3 min-h-[30px]">
-                        {board[day][moment].length === 0 ? (
-                          <span className="text-xs text-muted-foreground opacity-60 italic select-none">Empty</span>
-                        ) : (
-                          board[day][moment].map((menu) => (
-                            <Card key={menu.id} className="p-2 bg-white shadow border cursor-move hover:bg-accent transition">
-                              <div className="font-medium">{menu.name}</div>
-                            </Card>
-                          ))
-                        )}
-                      </div>
+                      <DroppableMealSlot
+                        day={day}
+                        mealMoment={moment}
+                        menus={board[day][moment]}
+                        onDropMenu={(menuId, fromDay, fromMoment) => {
+                          // Only allow drop if mealMoment matches menu's category
+                          const menu = board[fromDay][fromMoment].find(m => m.id === menuId);
+                          if (!menu || menu.category.toUpperCase() !== moment) return;
+                          // Remove from old slot
+                          const newBoard = JSON.parse(JSON.stringify(board));
+                          newBoard[fromDay][fromMoment] = newBoard[fromDay][fromMoment].filter(m => m.id !== menuId);
+                          // Add to new slot
+                          newBoard[day][moment].push(menu);
+                          setBoard(newBoard);
+                          // Flatten board to menus array for parent
+                          const newMenus = Object.values(newBoard).flatMap(dayObj => Object.values(dayObj).flat());
+                          onMenusChange(newMenus);
+                        }}
+                      />
                     </SortableContext>
                   </Card>
                 ))}
