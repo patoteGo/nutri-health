@@ -18,7 +18,21 @@ const handler = NextAuth({
       clientSecret: getRequiredEnvVar("GOOGLE_CLIENT_SECRET"),
     }),
   ],
-  // Add any custom NextAuth config here
+  // Ensure profile image is always present in session
+  callbacks: {
+    async session({ session, token }) {
+      if (token?.picture) {
+        session.user.image = token.picture as string;
+      }
+      return session;
+    },
+    async jwt({ token, profile }) {
+      if (profile?.picture) {
+        token.picture = profile.picture;
+      }
+      return token;
+    },
+  },
 });
 
 export const GET = handler;
