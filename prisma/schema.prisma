@@ -21,6 +21,19 @@ model User {
   weeklyPlans WeeklyMealPlan[]
 }
 
+model Ingredient {
+  id      String         @id @default(uuid())
+  name    String         @unique
+  carbs   Float          // grams per 100g or per unit
+  protein Float          // grams per 100g or per unit
+  fat     Float          // grams per 100g or per unit
+  unit    IngredientUnit @default(GRAM) // how this ingredient is measured (GRAM, UNIT, ML, etc)
+  imageUrl String?       // URL to an image of the ingredient
+  searchTerms String[]   @default([]) // Array of search terms in multiple languages
+  // Optionally: fiber, calories, etc.
+  // If needed, add a conversionFactor field for custom conversions.
+}
+
 model Meal {
   id          String   @id @default(uuid())
   user        User     @relation(fields: [userId], references: [id])
@@ -64,16 +77,5 @@ enum IngredientUnit {
   PIECE
 }
 
-model Ingredient {
-  id      String         @id @default(uuid())
-  name    String         @unique
-  carbs   Float          // grams per 100g or per unit
-  protein Float          // grams per 100g or per unit
-  fat     Float          // grams per 100g or per unit
-  unit    IngredientUnit @default(GRAM) // how this ingredient is measured (GRAM, UNIT, ML, etc)
-  imageUrl String?       // URL to an image of the ingredient
-  searchTerms String[]   @default([]) // Array of search terms in multiple languages
-  // Optionally: fiber, calories, etc.
-  // If needed, add a conversionFactor field for custom conversions.
-}
+
 
