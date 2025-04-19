@@ -73,7 +73,7 @@ interface DroppableMealSlotProps {
   onDropMenu: (menuId: string, fromDay: string, fromMoment: string) => void;
 }
 
-const DroppableMealSlot: React.FC<DroppableMealSlotProps> = ({ day, mealMoment, menus, onDropMenu }) => {
+const DroppableMealSlot: React.FC<DroppableMealSlotProps> = React.memo(({ day, mealMoment, menus, onDropMenu }) => {
   const { setNodeRef, isOver } = useDroppable({
     id: `${day}|${mealMoment}`,
     data: { day, mealMoment },
@@ -92,7 +92,7 @@ const DroppableMealSlot: React.FC<DroppableMealSlotProps> = ({ day, mealMoment, 
       )}
     </div>
   );
-};
+});
 
 // --- Main Kanban Component ---
 const WeeklyMealKanban: React.FC<WeeklyMealKanbanProps> = ({ menus, weekStart, onMenusChange }) => {

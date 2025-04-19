@@ -17,7 +17,7 @@ interface DraggableMenuCardProps {
   onDelete?: () => void;
 }
 
-const DraggableMenuCard: React.FC<DraggableMenuCardProps> = ({ menu, day, mealMoment, onDelete }) => {
+const DraggableMenuCard: React.FC<DraggableMenuCardProps> = React.memo(({ menu, day, mealMoment, onDelete }) => {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: `${menu.id}|${day}|${mealMoment}`,
     data: { menuId: menu.id, day, mealMoment },
@@ -71,6 +71,6 @@ const DraggableMenuCard: React.FC<DraggableMenuCardProps> = ({ menu, day, mealMo
       )}
     </Card>
   );
-};
+});
 
 export default DraggableMenuCard;
