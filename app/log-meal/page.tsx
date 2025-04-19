@@ -163,7 +163,7 @@ function MealPartsList() {
       {parts.map((part, idx) => (
         <div key={idx} className="flex gap-2 items-center bg-card rounded-md p-2 shadow-xs">
           {/* Name Input */}
-          <div className="flex-1">
+          <div className="w-full">
             <label className="block text-xs mb-1">{t('food_name', 'Name')}</label>
             <Input
               type="text"
@@ -174,7 +174,7 @@ function MealPartsList() {
             />
           </div>
           {/* Grams Input */}
-          <div className="w-24">
+          <div className="w-36">
             <label className="block text-xs mb-1">{t('grams', 'Grams')}</label>
             <Input
               type="number"
