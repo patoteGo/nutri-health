@@ -396,3 +396,5 @@ export default function MenuBuilder({
     </div>
   );
 }
+
+MenuBuilder.displayName = "MenuBuilder";

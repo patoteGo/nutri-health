@@ -1,38 +1,19 @@
 "use client";
 
 import React from "react";
-import { DndContext, closestCenter, DragEndEvent } from "@dnd-kit/core";
-import {
-  arrayMove,
-  SortableContext,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { z } from "zod";
+import React from "react";
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { mealMoments } from "@/lib/weekUtils";
 import { Card } from "../ui/card";
 import { useDroppable } from "@dnd-kit/core";
 import DraggableMenuCard from "./DraggableMenuCard";
-import { WeeklyMealPlanSchema, MealMoment } from "@/lib/types";
 
 // --- Zod Menu Schema ---
-const MenuSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  category: z.string(), // Should match MealMoment
-  personId: z.string(),
-  ingredients: z.array(z.any()), // Simplified for now
-});
-
-export type Menu = z.infer<typeof MenuSchema> & {
-  assignedDay?: string;
-  assignedMoment?: string;
-};
 
 // --- Props ---
 interface WeeklyMealKanbanProps {
-  menus: Menu[];
-  weekStart: Date;
-  onMenusChange: (menus: Menu[]) => void;
+  menus: any[];
+  onMenusChange: (menus: any[]) => void;
 }
 
 const weekDays = [
@@ -69,11 +50,10 @@ function getMealLabel(meal: string) {
 interface DroppableMealSlotProps {
   day: string;
   mealMoment: string;
-  menus: Menu[];
-  onDropMenu: (menuId: string, fromDay: string, fromMoment: string) => void;
+  menus: any[];
 }
 
-const DroppableMealSlot: React.FC<DroppableMealSlotProps> = React.memo(({ day, mealMoment, menus, onDropMenu }) => {
+const DroppableMealSlot: React.FC<DroppableMealSlotProps> = React.memo(({ day, mealMoment, menus }) => {
   const { setNodeRef, isOver } = useDroppable({
     id: `${day}|${mealMoment}`,
     data: { day, mealMoment },
@@ -94,8 +74,10 @@ const DroppableMealSlot: React.FC<DroppableMealSlotProps> = React.memo(({ day, m
   );
 });
 
+DroppableMealSlot.displayName = "DroppableMealSlot";
+
 // --- Main Kanban Component ---
-const WeeklyMealKanban: React.FC<WeeklyMealKanbanProps> = ({ menus, weekStart, onMenusChange }) => {
+const WeeklyMealKanban: React.FC<WeeklyMealKanbanProps> = ({ menus, onMenusChange }) => {
   // --- Memoized board: always reflects latest menus ---
   const board = React.useMemo(() => {
     const initial: Record<string, Record<string, Menu[]>> = {};
@@ -196,4 +178,5 @@ const WeeklyMealKanban: React.FC<WeeklyMealKanbanProps> = ({ menus, weekStart, o
   );
 };
 
+WeeklyMealKanban.displayName = "WeeklyMealKanban";
 export default WeeklyMealKanban;

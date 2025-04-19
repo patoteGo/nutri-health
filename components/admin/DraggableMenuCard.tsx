@@ -111,4 +111,5 @@ const DraggableMenuCard: React.FC<DraggableMenuCardProps> = React.memo(({ menu, 
   );
 });
 
+DraggableMenuCard.displayName = "DraggableMenuCard";
 export default DraggableMenuCard;
