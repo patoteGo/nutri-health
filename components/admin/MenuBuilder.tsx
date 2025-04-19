@@ -338,52 +338,17 @@ function MenuBuilder({
            {unassignedMenus.length === 0 && (
              <div className="text-muted-foreground text-sm">{t('no_menus_yet', 'No menus yet.')}</div>
            )}
-           {unassignedMenus.map(menu => (
-             <li key={menu.id} className="mb-4">
-               <DraggableMenuCard
-                 menu={menu}
-                 day="unassigned"
-                 mealMoment="unassigned"
-                 onDelete={() => deleteMenuMutation.mutate(menu.id)}
-               />
-               <div className="flex justify-between items-center">
-                 <span className="font-semibold">{menu.name}</span>
-                 <Dialog>
-                   <DialogTrigger asChild>
-                     <Button size="icon" variant="ghost" aria-label="Delete menu" title="Delete menu">
-                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-destructive"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></svg>
-                     </Button>
-                   </DialogTrigger>
-                   <DialogContent>
-                     <DialogHeader>
-                       <DialogTitle>Delete Menu</DialogTitle>
-                       <DialogDescription>
-                         Are you sure you want to delete this menu? This action cannot be undone.
-                       </DialogDescription>
-                     </DialogHeader>
-                     <DialogFooter>
-                       <DialogClose asChild>
-                         <Button variant="outline">Cancel</Button>
-                       </DialogClose>
-                       <Button
-                         variant="destructive"
-                         onClick={() => deleteMenuMutation.mutate(menu.id)}
-                         disabled={deleteMenuMutation.isPending}
-                       >
-                         {deleteMenuMutation.isPending ? t('deleting', 'Deleting...') : t('delete', 'Delete')}
-                       </Button>
-                     </DialogFooter>
-                   </DialogContent>
-                 </Dialog>
-               </div>
-               <div className="text-xs text-muted-foreground">{menu.category}</div>
-               <ul className="text-xs ml-4">
-                 {(menu.ingredients ?? []).map((ing: Ingredient, idx: number) => (
-                   <li key={idx}>{t(`ingredient_${ing.name.toLowerCase().replace(/\s+/g, '_')}`, ing.name)} — {ing.weight}g</li>
-                 ))}
-               </ul>
-             </li>
-           ))}
+            {unassignedMenus.map(menu => (
+              <li key={menu.id} className="mb-4">
+                {/* Pass the deleteMenuMutation directly to the DraggableMenuCard component */}
+                <DraggableMenuCard
+                  menu={menu}
+                  day="unassigned"
+                  mealMoment="unassigned"
+                  onDelete={() => deleteMenuMutation.mutate(menu.id)}
+                />
+              </li>
+            ))}
          </ul>
        </div>
      </div>
