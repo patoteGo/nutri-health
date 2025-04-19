@@ -4,7 +4,7 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Select, SelectItem, SelectContent, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { Tooltip, TooltipTrigger, TooltipContent } from "../../components/ui/tooltip";
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../../components/ui/dialog";
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "../../components/ui/dialog";
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { z } from "zod";
 
@@ -320,13 +320,9 @@ export default function MenuBuilder({
                       </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                      <Button variant="outline" onClick={e => {
-                        // Close dialog via ref, handled by DialogClose button
-                        const dialog = e.currentTarget.closest('[data-slot="dialog-content"]');
-                        if (dialog) {
-                          (dialog.querySelector('[data-slot="dialog-close"]') as HTMLElement)?.click();
-                        }
-                      }}>Cancel</Button>
+                      <DialogClose asChild>
+                        <Button variant="outline">Cancel</Button>
+                      </DialogClose>
                       <Button variant="destructive" onClick={e => {
                         removeMenu(menu.id);
                         // Close dialog via ref
