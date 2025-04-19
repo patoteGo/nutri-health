@@ -2,25 +2,33 @@
 // Admin dashboard UI for editing weekly meal plans
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { z } from "zod";
+// import { z } from "zod"; // removed unused import
 import { Button } from "../../components/ui/button";
 import MenuBuilder from "./MenuBuilder";
 import { DndContext, DragEndEvent } from "@dnd-kit/core";
 import { Select, SelectItem, SelectContent, SelectTrigger, SelectValue } from "../../components/ui/select";
-import { getWeekStart, getWeekDays, mealMoments } from "../../lib/weekUtils";
-import { WeeklyMealPlanSchema, MealMoment } from "../../lib/types";
+import { getWeekStart } from "../../lib/weekUtils";
+// import { WeeklyMealPlanSchema, MealMoment } from "../../lib/types"; // removed unused imports
 import { useSession } from "next-auth/react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import WeeklyMealKanban from "./WeeklyMealKanban";
 
 // Types
 interface WeeklyMealPlanAdminProps {
-  userEmail: string;
+  // userEmail: string; // removed unused prop
 }
 
-export default function WeeklyMealPlanAdmin({ userEmail }: WeeklyMealPlanAdminProps) {
+export default function WeeklyMealPlanAdmin({}: WeeklyMealPlanAdminProps) {
   // ...existing code
-  const [menus, setMenus] = useState<any[]>([]);
+  // Ideally, define a Menu type elsewhere and import it
+interface Menu {
+  id: string;
+  category?: string;
+  assignedDay?: string;
+  assignedMoment?: string;
+  [key: string]: unknown;
+}
+const [menus, setMenus] = useState<Menu[]>([]);
 
   // Drag-and-drop handler for both MenuBuilder and Kanban
   function handleDragEnd(event: DragEndEvent) {
@@ -43,14 +51,15 @@ export default function WeeklyMealPlanAdmin({ userEmail }: WeeklyMealPlanAdminPr
     setMenus(newMenus);
   }
   const { t } = useTranslation();
-  const { data: session } = useSession();
+  // const { data: session } = useSession(); // removed unused variable
   const [selectedPerson, setSelectedPerson] = useState<string>("");
   const [weekStart, setWeekStart] = useState<Date>(getWeekStart(new Date()));
-  const [editPlan, setEditPlan] = useState<any>(null);
+  // Plan type is unknown, so use unknown and type guard when needed
+const [editPlan, setEditPlan] = useState<unknown>(null);
   const queryClient = useQueryClient();
 
   // Fetch people (users)
-  const { data: people, isLoading: peopleLoading, error: peopleError } = useQuery({
+  const { data: people, isLoading: peopleLoading, error: peopleError } = useQuery<{ id: string; name?: string; email: string }[]>({
     queryKey: ["people"],
     queryFn: async () => {
       const res = await fetch("/api/admin/people");
@@ -60,7 +69,7 @@ export default function WeeklyMealPlanAdmin({ userEmail }: WeeklyMealPlanAdminPr
   });
 
   // Fetch plan for selected person/week
-  const { data: plan, refetch } = useQuery({
+  const { data: plan } = useQuery<unknown>({
     queryKey: ["weeklyMealPlan", selectedPerson, weekStart.toISOString()],
     queryFn: async () => {
       if (!selectedPerson) return null;
@@ -74,14 +83,16 @@ export default function WeeklyMealPlanAdmin({ userEmail }: WeeklyMealPlanAdminPr
 
   useEffect(() => {
     setEditPlan(plan);
-    if (plan && plan.menus) {
-      setMenus(plan.menus);
+    // Use type guard for plan
+    if (plan && typeof plan === "object" && plan !== null && 'menus' in plan && Array.isArray((plan as any).menus)) {
+      setMenus((plan as any).menus);
     }
   }, [plan]);
 
   // Save mutation
   const mutation = useMutation({
-    mutationFn: async (newPlan: any) => {
+    // newPlan type is unknown
+mutationFn: async (newPlan: unknown) => {
       const res = await fetch("/api/admin/weekly-meal-plan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -113,7 +124,7 @@ export default function WeeklyMealPlanAdmin({ userEmail }: WeeklyMealPlanAdminPr
               {!peopleLoading && !peopleError && (!people || people.length === 0) && (
                 <div className="px-4 py-2 text-muted-foreground">{t('no_users_found', 'No users found')}</div>
               )}
-              {people && people.length > 0 && people.map((p: any) => (
+              {people && people.length > 0 && people.map((p) => (
                 <SelectItem key={p.id} value={p.id}>{p.name || p.email}</SelectItem>
               ))}
             </SelectContent>
@@ -133,7 +144,7 @@ export default function WeeklyMealPlanAdmin({ userEmail }: WeeklyMealPlanAdminPr
       </div>
       {selectedPerson && people && (
         <div className="mb-4 text-base">
-          {t('managing_meals_for', 'Managing meals for:')} <span className="font-semibold">{people.find((p: any) => p.id === selectedPerson)?.name || people.find((p: any) => p.id === selectedPerson)?.email}</span>
+          {t('managing_meals_for', 'Managing meals for:')} <span className="font-semibold">{people.find((p) => p.id === selectedPerson)?.name || people.find((p) => p.id === selectedPerson)?.email}</span>
         </div>
       )}
       {/* Menu Builder */}
@@ -153,7 +164,8 @@ export default function WeeklyMealPlanAdmin({ userEmail }: WeeklyMealPlanAdminPr
         onClick={() => mutation.mutate({
           person: selectedPerson,
           weekStart: weekStart.toISOString(),
-          meals: editPlan.meals,
+          // Type guard for editPlan
+          meals: (editPlan && typeof editPlan === "object" && editPlan !== null && 'meals' in editPlan) ? (editPlan as any).meals : undefined,
         })}
         disabled={!selectedPerson || !editPlan || mutation.isLoading}
       >
