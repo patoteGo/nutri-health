@@ -64,8 +64,11 @@ export default function MenuBuilder({
       .finally(() => setIngredientLoading(false));
   }, [ingredientQuery]);
 
+  const isDuplicate = selectedIngredient && ingredients.some(ing => ing.id === selectedIngredient.id);
+
   function addIngredient() {
     if (!selectedIngredient || ingredientWeight <= 0) return;
+    if (isDuplicate) return;
     setIngredients(prev => [
       ...prev,
       { ...selectedIngredient, weight: ingredientWeight },
@@ -186,10 +189,22 @@ export default function MenuBuilder({
               : 'Amount'
             }
           />
-          <Button type="button" onClick={addIngredient} variant="secondary" disabled={!selectedIngredient || ingredientWeight <= 0}>
+          <Button
+            type="button"
+            onClick={addIngredient}
+            variant="secondary"
+            disabled={!selectedIngredient || ingredientWeight <= 0 || isDuplicate}
+            title={isDuplicate ? 'This ingredient is already in the list' : ''}
+          >
             Add Ingredient
           </Button>
         </div>
+        {isDuplicate && (
+          <div className="text-destructive text-sm mt-1 flex items-center gap-1" role="alert">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" aria-hidden="true"><path stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01m-6.938 2h13.856c1.54 0 2.502-1.667 1.732-3L13.732 5c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            This ingredient is already on the list.
+          </div>
+        )}
         <ul className="list-disc ml-6 mt-2 text-sm">
           {ingredients.map((ing, idx) => (
             <li key={idx} className="flex items-center gap-3 py-2">
