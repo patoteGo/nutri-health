@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { signIn, signOut, useSession } from "next-auth/react"; // For authentication actions
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { User as UserIcon } from "lucide-react"; // fallback icon
-import Image from "next/image";
 
 
 import { usePathname } from "next/navigation";
@@ -86,21 +85,14 @@ const Header: React.FC = () => {
                 aria-label="Profile menu"
               >
                 {session.user.image ? (
-  <Image
-    src={session.user.image}
-    alt={session.user.name || session.user.email || "Profile"}
-    width={32}
-    height={32}
-    className="w-8 h-8 rounded-full object-cover"
-    onError={(e) => {
-      // Hide image if error, fallback to icon
-      (e.target as HTMLImageElement).style.display = 'none';
-    }}
-    unoptimized // Remove if you want to use optimization only for allowed domains
-  />
-) : (
-  <UserIcon className="w-6 h-6 text-muted-foreground" />
-)}
+                  <img
+                    src={session.user.image}
+                    alt={session.user.name || session.user.email || "Profile"}
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                ) : (
+                  <UserIcon className="w-6 h-6 text-muted-foreground" />
+                )}
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="min-w-[180px]">
