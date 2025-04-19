@@ -43,7 +43,7 @@ describe("MenuBuilder ingredient adding", () => {
     fireEvent.click(screen.getByText("Brown Rice"));
     const weightInput = screen.getByPlaceholderText(/weight/i);
     fireEvent.change(weightInput, { target: { value: "50" } });
-    fireEvent.click(screen.getByText(/add ingredient/i));
+    fireEvent.click(screen.getByRole('button', { name: /add ingredient|adicionar ingrediente/i }));
     expect(screen.getByText(/Brown Rice — 50g/)).toBeInTheDocument();
   });
 
@@ -58,7 +58,7 @@ describe("MenuBuilder ingredient adding", () => {
     fireEvent.click(screen.getByText("Ovo"));
     const qtyInput = screen.getByPlaceholderText(/quantity/i);
     fireEvent.change(qtyInput, { target: { value: "2" } });
-    fireEvent.click(screen.getByText(/add ingredient/i));
+    fireEvent.click(screen.getByRole('button', { name: /add ingredient|adicionar ingrediente/i }));
     expect(screen.getByText(/Ovo — 2/)).toBeInTheDocument();
     i18n.changeLanguage('en'); // reset
   });
@@ -73,7 +73,7 @@ describe("MenuBuilder ingredient adding", () => {
     fireEvent.click(screen.getByText("Egg"));
     const qtyInput = screen.getByPlaceholderText(/quantity/i);
     fireEvent.change(qtyInput, { target: { value: "2" } });
-    fireEvent.click(screen.getByText(/add ingredient/i));
+    fireEvent.click(screen.getByRole('button', { name: /add ingredient|adicionar ingrediente/i }));
     // Try to add again
     fireEvent.change(input, { target: { value: "egg" } });
     await waitFor(() => {
