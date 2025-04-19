@@ -10,6 +10,7 @@ import { getWeekStart, getWeekDays, mealMoments } from "../../lib/weekUtils";
 import { WeeklyMealPlanSchema, MealMoment } from "../../lib/types";
 import { useSession } from "next-auth/react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import WeeklyMealKanban from "./WeeklyMealKanban";
 
 // Types
 interface WeeklyMealPlanAdminProps {
@@ -116,41 +117,11 @@ export default function WeeklyMealPlanAdmin({ userEmail }: WeeklyMealPlanAdminPr
       </section>
       {/* TODO: Add drag-and-drop assignment of menus to week days here */}
       {editPlan && (
-        <table className="w-full border mb-4">
-          <thead>
-            <tr>
-              <th>{t('day', 'Day')}</th>
-              {mealMoments.map((moment: MealMoment) => (
-                <th key={moment}>{t(`meal_${moment}`, moment)}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {getWeekDays(weekStart).map(day => (
-              <tr key={day.toISOString()}>
-                <td>{day.toLocaleDateString()}</td>
-                {mealMoments.map((moment: MealMoment) => (
-                  <td key={moment}>
-                    <input
-                      className="border px-2 py-1 w-full"
-                      value={editPlan.meals?.[day.toISOString()]?.[moment]?.parts?.[0]?.name || ""}
-                      onChange={e => {
-                        setEditPlan((prev: any) => {
-                          const newPlan = { ...prev };
-                          newPlan.meals = newPlan.meals || {};
-                          newPlan.meals[day.toISOString()] = newPlan.meals[day.toISOString()] || {};
-                          newPlan.meals[day.toISOString()][moment] = newPlan.meals[day.toISOString()][moment] || { parts: [{}] };
-                          newPlan.meals[day.toISOString()][moment].parts[0].name = e.target.value;
-                          return newPlan;
-                        });
-                      }}
-                    />
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <WeeklyMealKanban
+          menus={menus}
+          weekStart={weekStart}
+          onMenusChange={setMenus}
+        />
       )}
       <Button
         onClick={() => mutation.mutate({
