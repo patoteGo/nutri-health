@@ -91,6 +91,26 @@ export default function MenuBuilder({
 
   const queryClient = useQueryClient();
 
+  // Mutation for deleting a menu from the DB
+  const deleteMenuMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/menus?id=${id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error?.error || 'Failed to delete menu');
+      }
+      return id;
+    },
+    onSuccess: (id: string) => {
+      onMenusChange(menus.filter(menu => menu.id !== id));
+      toast.success(t('menu_deleted_success', 'Menu deleted successfully!'));
+      queryClient.invalidateQueries({ queryKey: ['menus'] });
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || t('menu_delete_failed', 'Failed to delete menu'));
+    },
+  });
+
   const menuMutation = useMutation({
     mutationFn: async ({ name, category, personId, ingredients }: { name: string; category: string; personId: string; ingredients: Ingredient[] }) => {
       const res = await fetch('/api/menus', {
@@ -101,8 +121,9 @@ export default function MenuBuilder({
       if (!res.ok) throw new Error('Failed to save menu');
       return res.json();
     },
-    onSuccess: (data) => {
-      onMenusChange([...menus, { id: Math.random().toString(36).slice(2), name: menuName, category, ingredients }]);
+    onSuccess: (menu) => {
+      // Use the real menu object returned from the backend (with DB id)
+      onMenusChange([...menus, menu]);
       setMenuName("");
       setCategory(categories[0]);
       setIngredients([]);
@@ -323,14 +344,13 @@ export default function MenuBuilder({
                       <DialogClose asChild>
                         <Button variant="outline">Cancel</Button>
                       </DialogClose>
-                      <Button variant="destructive" onClick={e => {
-                        removeMenu(menu.id);
-                        // Close dialog via ref
-                        const dialog = e.currentTarget.closest('[data-slot="dialog-content"]');
-                        if (dialog) {
-                          (dialog.querySelector('[data-slot="dialog-close"]') as HTMLElement)?.click();
-                        }
-                      }}>Delete</Button>
+                      <Button
+                        variant="destructive"
+                        onClick={() => deleteMenuMutation.mutate(menu.id)}
+                        disabled={deleteMenuMutation.isLoading}
+                      >
+                        {deleteMenuMutation.isLoading ? t('deleting', 'Deleting...') : t('delete', 'Delete')}
+                      </Button>
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>

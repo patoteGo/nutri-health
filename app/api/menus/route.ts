@@ -45,8 +45,38 @@ export async function POST(req: NextRequest) {
         })),
       },
     });
-    return NextResponse.json(menu);
+    return NextResponse.json({
+  id: menu.id,
+  name: name, // use the name from the request, since DB does not store it
+  category: category,
+  personId: personId,
+  ingredients: menu.parts,
+});
   } catch (e) {
     return NextResponse.json({ error: 'Failed to create menu', details: String(e) }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get('id');
+    if (!id) {
+      return NextResponse.json({ error: 'Missing menu id in query string (?id=...)' }, { status: 400 });
+    }
+    try {
+      const deleted = await prisma.meal.delete({ where: { id } });
+      if (!deleted) {
+        return NextResponse.json({ error: `Menu with id ${id} not found` }, { status: 404 });
+      }
+      return NextResponse.json({ success: true, deleted });
+    } catch (err: any) {
+      if (err.code === 'P2025') {
+        return NextResponse.json({ error: `Menu with id ${id} not found (prisma)` }, { status: 404 });
+      }
+      return NextResponse.json({ error: `DB error: ${err.message}` }, { status: 500 });
+    }
+  } catch (e: any) {
+    return NextResponse.json({ error: `Failed to delete menu: ${e.message}` }, { status: 500 });
   }
 }
