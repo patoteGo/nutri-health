@@ -1,6 +1,9 @@
 "use client";
 import React from "react";
 import LanguageSwitcher from "./LanguageSwitcher";
+import { Button } from "@/components/ui/button";
+import { signIn, signOut, useSession } from "next-auth/react"; // For authentication actions
+
 import { usePathname } from "next/navigation";
 import {
   Breadcrumb,
@@ -23,6 +26,7 @@ const Header: React.FC = () => {
   const pathname = usePathname() ?? "/";
   const segments = typeof pathname === "string" ? pathname.split("/").filter(Boolean) : [];
   let pathSoFar = "";
+  const { data: session, status } = useSession(); // Get session info
 
   return (
     <header className="w-full flex justify-between gap-2 max-w-md mx-auto py-3 items-center">
@@ -55,9 +59,29 @@ const Header: React.FC = () => {
           })}
         </BreadcrumbList>
       </Breadcrumb>
-      {/* Language Switcher aligned right */}
-      <div className="flex justify-end items-center">
+      {/* Language Switcher and Login Button aligned right */}
+      <div className="flex justify-end items-center gap-2">
         <LanguageSwitcher />
+        {/* Show Login button if not authenticated */}
+        {status === "unauthenticated" && (
+          <Button
+            variant="outline"
+            onClick={() => signIn()}
+            data-testid="login-button"
+          >
+            Login
+          </Button>
+        )}
+        {/* Optionally, show Logout if authenticated
+        {status === "authenticated" && (
+          <Button
+            variant="outline"
+            onClick={() => signOut()}
+            data-testid="logout-button"
+          >
+            Logout
+          </Button>
+        )} */}
       </div>
     </header>
   );

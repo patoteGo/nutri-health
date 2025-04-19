@@ -1,6 +1,7 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import Header from "@/components/Header";
+import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import { vi } from "vitest";
 
@@ -16,6 +17,12 @@ vi.mock("@/components/LanguageSwitcher", () => ({
 const mockPathname = (path: string | null) => {
   (usePathname as unknown as ReturnType<typeof vi.fn>).mockReturnValue(path);
 };
+
+vi.mock("next-auth/react", () => ({
+  useSession: vi.fn(),
+  signIn: vi.fn(),
+  signOut: vi.fn(),
+}));
 
 describe("Header", () => {
   it("renders breadcrumb for root", () => {
