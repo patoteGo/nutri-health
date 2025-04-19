@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Card } from "../ui/card";
 import { Droppable, Draggable, DraggableProvided } from "@hello-pangea/dnd";
 import type { Menu } from "@/lib/types";
@@ -11,30 +12,30 @@ interface WeeklyMealKanbanProps {
 }
 
 const weekDays = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-];
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+  "sunday",
+]; // Lowercase for translation keys
 
 // --- Helper: Get meal moment label from enum ---
-function getMealLabel(meal: string) {
+function getMealLabel(meal: string, t: (key: string, defaultText?: string) => string) {
   switch (meal) {
     case "BREAKFAST":
-      return "Breakfast";
+      return t("meal_BREAKFAST", "Café da manhã");
     case "SNACK1":
-      return "Snack 1";
+      return t("meal_SNACK1", "Lanche 1");
     case "LUNCH":
-      return "Lunch";
+      return t("meal_LUNCH", "Almoço");
     case "SNACK2":
-      return "Snack 2";
+      return t("meal_SNACK2", "Lanche 2");
     case "DINNER":
-      return "Dinner";
+      return t("meal_DINNER", "Jantar");
     case "SUPPER":
-      return "Supper";
+      return t("meal_SUPPER", "Ceia");
     default:
       return meal;
   }
@@ -83,6 +84,7 @@ const MenuCard: React.FC<{
 };
 
 const WeeklyMealKanban: React.FC<WeeklyMealKanbanProps> = ({ menus }) => {
+  const { t } = useTranslation();
   // Debug counter for component renders
   const renderCount = React.useRef(0);
   renderCount.current++;
@@ -136,13 +138,13 @@ const WeeklyMealKanban: React.FC<WeeklyMealKanbanProps> = ({ menus }) => {
           <div className="flex gap-2 min-w-[1200px]">
             {/* Day columns */}
             {weekDays.map((day) => {
-              const dayMenus = menusByDay[day] || [];
+                const dayMenus = menusByDay[day] || [];
               
-              return (
-                <div key={day} className="flex-1 min-w-[180px]">
-                  <div className="text-center text-sm mb-2 font-normal tracking-wide bg-muted rounded-t-lg py-2 shadow-sm border-b border-muted-foreground/10">
-                    {day}
-                  </div>
+                return (
+                  <div key={day} className="flex-1 min-w-[180px]">
+                    <div className="text-center text-sm mb-2 font-normal tracking-wide bg-muted rounded-t-lg py-2 shadow-sm border-b border-muted-foreground/10">
+                      {t(`weekday_${day}`, day.charAt(0).toUpperCase() + day.slice(1))}
+                    </div>
                   
                   {/* Make each day a droppable area */}
                   <Droppable droppableId={day} type="menu">
@@ -172,7 +174,7 @@ const WeeklyMealKanban: React.FC<WeeklyMealKanbanProps> = ({ menus }) => {
                             return typeMenus.map((menu, index) => (
                               <div key={`${day}-${type}-${menu.id}`} className="mb-3">
                                 <div className="text-xs font-semibold mb-1 text-muted-foreground">
-                                  {getMealLabel(type)}
+                                  {getMealLabel(type, t)}
                                 </div>
                                 
                                 <Draggable draggableId={menu.id} index={index}>
@@ -201,7 +203,7 @@ const WeeklyMealKanban: React.FC<WeeklyMealKanbanProps> = ({ menus }) => {
                           {snapshot.isDraggingOver && (
                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                               <div className="text-center p-3 text-sm text-primary font-medium bg-primary/10 rounded shadow-lg border border-primary">
-                                Drop to add to {day}
+                                {t('drop_to_add_to_day', 'Solte para adicionar em {{day}}', { day: t(`weekday_${day}`, day.charAt(0).toUpperCase() + day.slice(1)) })}
                               </div>
                             </div>
                           )}

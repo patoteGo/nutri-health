@@ -88,6 +88,20 @@
   "ingredient_broccoli": "Brócolis",
   "ingredient_olive_oil": "Azeite de oliva",
   "ingredient_potato": "Batata",
-  "ingredient_salmon": "Salmão"
+  "ingredient_salmon": "Salmão",
 
+  "weekday_monday": "Segunda-feira",
+  "weekday_tuesday": "Terça-feira",
+  "weekday_wednesday": "Quarta-feira",
+  "weekday_thursday": "Quinta-feira",
+  "weekday_friday": "Sexta-feira",
+  "weekday_saturday": "Sábado",
+  "weekday_sunday": "Domingo",
+  "drop_to_add_to_day": "Solte para adicionar em {{day}}",
+  "menu_name_placeholder": "Digite o nome do cardápio",
+  "search_ingredients": "Buscar ingredientes...",
+  "unassigned_menus": "Cardápios não atribuídos",
+  "no_unassigned_menus": "Nenhum cardápio não atribuído",
+  "new_menu": "Novo Cardápio",
+  "name": "Nome"
 }

@@ -34,13 +34,6 @@ export default function MenuBuilder({ menus, onMenusChange, personId, parentIsDr
   const { t } = useTranslation();
   const unassignedMenus = menus.filter(menu => !menu.assignedDay && !menu.assignedMoment);
   
-  // Debug logging
-  React.useEffect(() => {
-    if (parentIsDragging) {
-      console.log('MenuBuilder: Parent is dragging');
-    }
-  }, [parentIsDragging]);
-
   const [menuName, setMenuName] = useState("");
   const [category, setCategory] = useState(categories[0]);
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
@@ -49,12 +42,13 @@ export default function MenuBuilder({ menus, onMenusChange, personId, parentIsDr
   const [ingredientLoading, setIngredientLoading] = useState(false);
   const [ingredientError, setIngredientError] = useState<string | null>(null);
 
-// Show ingredientError as toast if not null
-useEffect(() => {
-  if (ingredientError) {
-    toast.error(ingredientError);
-  }
-}, [ingredientError]);
+  // Show ingredientError as toast if not null
+  useEffect(() => {
+    if (ingredientError) {
+      toast.error(ingredientError);
+    }
+  }, [ingredientError]);
+    
   const [selectedIngredient, setSelectedIngredient] = useState<z.infer<typeof IngredientSchema> | null>(null);
   const [ingredientWeight, setIngredientWeight] = useState<number>(0);
 
