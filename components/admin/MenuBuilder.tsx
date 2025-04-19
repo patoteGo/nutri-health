@@ -4,8 +4,8 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Select, SelectItem, SelectContent, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { Tooltip, TooltipTrigger, TooltipContent } from "../../components/ui/tooltip";
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "../../components/ui/dialog";
-import { useDroppable } from "@dnd-kit/core";
+
+import { DndContext, PointerSensor, useSensor, useSensors, useDroppable } from "@dnd-kit/core";
 import DraggableMenuCard from "./DraggableMenuCard";
 import type { Menu, Ingredient } from "@/lib/types";
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -42,6 +42,14 @@ function MenuBuilder({
   onMenusChange: (menus: Menu[]) => void;
   personId: string;
 }) {
+  // dnd-kit sensors: PointerSensor supports both mouse and touch for mobile compatibility
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // Prevent accidental drag on mobile
+      },
+    })
+  );
   // ...existing hooks
   const unassignedMenus = menus.filter(menu => !menu.assignedDay && !menu.assignedMoment);
   const { setNodeRef: unassignedSetNodeRef, isOver: unassignedIsOver } = useDroppable({ id: 'unassigned' });
@@ -163,7 +171,8 @@ function MenuBuilder({
 
 
   return (
-    <div className="border rounded p-4 mb-6 bg-muted/20">
+    <DndContext sensors={sensors} /* Add your onDragEnd, collisionDetection, etc. as needed */>
+      <div className="border rounded p-4 mb-6 bg-muted/20">
       <h2 className="text-xl font-semibold mb-2">{t('menu_builder_title', 'Menu Builder')}</h2>
       <div className="flex flex-col gap-2 mb-4">
         <Input
@@ -352,7 +361,8 @@ function MenuBuilder({
          </ul>
        </div>
      </div>
-    );
+    </DndContext>
+  );
 }
 
 MenuBuilder.displayName = "MenuBuilder";
