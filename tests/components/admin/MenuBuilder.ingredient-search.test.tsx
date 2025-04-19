@@ -2,6 +2,14 @@ import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import MenuBuilder from "@/components/admin/MenuBuilder";
 import { vi } from "vitest";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+function renderWithQueryClient(ui: React.ReactElement) {
+  const queryClient = new QueryClient();
+  return render(
+    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>
+  );
+}
 
 // Mock fetch for /api/ingredients
 const mockIngredients = [
@@ -21,7 +29,7 @@ global.fetch = vi.fn(async (url) => {
 
 describe("MenuBuilder ingredient search", () => {
   it("shows ingredient options as user types", async () => {
-    render(<MenuBuilder menus={[]} onMenusChange={() => {}} />);
+    renderWithQueryClient(<MenuBuilder menus={[]} onMenusChange={() => {}} />);
     const input = screen.getByPlaceholderText(/search ingredient/i);
     fireEvent.change(input, { target: { value: "chick" } });
     await waitFor(() => {
@@ -30,7 +38,7 @@ describe("MenuBuilder ingredient search", () => {
   });
 
   it("shows nutrition info in search results", async () => {
-    render(<MenuBuilder menus={[]} onMenusChange={() => {}} />);
+    renderWithQueryClient(<MenuBuilder menus={[]} onMenusChange={() => {}} />);
     const input = screen.getByPlaceholderText(/search ingredient/i);
     fireEvent.change(input, { target: { value: "broc" } });
     await waitFor(() => {
@@ -39,7 +47,7 @@ describe("MenuBuilder ingredient search", () => {
   });
 
   it("handles no results", async () => {
-    render(<MenuBuilder menus={[]} onMenusChange={() => {}} />);
+    renderWithQueryClient(<MenuBuilder menus={[]} onMenusChange={() => {}} />);
     const input = screen.getByPlaceholderText(/search ingredient/i);
     fireEvent.change(input, { target: { value: "xyz" } });
     await waitFor(() => {
@@ -50,7 +58,7 @@ describe("MenuBuilder ingredient search", () => {
 
   it("handles fetch error", async () => {
     (global.fetch as any).mockImplementationOnce(async () => ({ ok: false }));
-    render(<MenuBuilder menus={[]} onMenusChange={() => {}} />);
+    renderWithQueryClient(<MenuBuilder menus={[]} onMenusChange={() => {}} />);
     const input = screen.getByPlaceholderText(/search ingredient/i);
     fireEvent.change(input, { target: { value: "egg" } });
     await waitFor(() => {

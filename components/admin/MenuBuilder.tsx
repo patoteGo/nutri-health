@@ -3,8 +3,10 @@ import React, { useState, useEffect } from "react";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Select, SelectItem, SelectContent, SelectTrigger, SelectValue } from "../../components/ui/select";
-
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { z } from "zod";
+
+import { toast } from "sonner";
 
 const IngredientSchema = z.object({
   id: z.string(),
@@ -27,12 +29,16 @@ interface Menu {
 
 const categories = ["Breakfast", "Lunch", "Dinner", "Snack"];
 
+
+// MenuBuilder now requires personId as a prop
 export default function MenuBuilder({
   menus,
   onMenusChange,
+  personId,
 }: {
   menus: Menu[];
   onMenusChange: (menus: Menu[]) => void;
+  personId: string;
 }) {
   const [menuName, setMenuName] = useState("");
   const [category, setCategory] = useState(categories[0]);
@@ -78,18 +84,50 @@ export default function MenuBuilder({
     setIngredientWeight(0);
   }
 
+  const queryClient = useQueryClient();
+
+  const menuMutation = useMutation({
+    mutationFn: async ({ name, category, personId, ingredients }: { name: string; category: string; personId: string; ingredients: Ingredient[] }) => {
+      const res = await fetch('/api/menus', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, category, personId, ingredients }),
+      });
+      if (!res.ok) throw new Error('Failed to save menu');
+      return res.json();
+    },
+    onSuccess: (data) => {
+      onMenusChange([...menus, { id: Math.random().toString(36).slice(2), name: menuName, category, ingredients }]);
+      setMenuName("");
+      setCategory(categories[0]);
+      setIngredients([]);
+      queryClient.invalidateQueries({ queryKey: ['menus'] });
+      toast.success('Menu saved successfully!');
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || 'Failed to save menu');
+    },
+  });
+
   function addMenu() {
-    if (!menuName || !category || ingredients.length === 0) return;
-    const newMenu: Menu = {
-      id: Math.random().toString(36).slice(2),
-      name: menuName,
-      category,
-      ingredients,
-    };
-    onMenusChange([...menus, newMenu]);
-    setMenuName("");
-    setCategory(categories[0]);
-    setIngredients([]);
+    // Check for missing fields and show toast for each case
+    if (!menuName) {
+      toast.error('Please enter a menu name.');
+      return;
+    }
+    if (!category) {
+      toast.error('Please select a category.');
+      return;
+    }
+    if (ingredients.length === 0) {
+      toast.error('Please add at least one ingredient.');
+      return;
+    }
+    if (!personId) {
+      toast.error('Please select a person before adding a menu.');
+      return;
+    }
+    menuMutation.mutate({ name: menuName, category, personId, ingredients });
   }
 
   function removeMenu(id: string) {
