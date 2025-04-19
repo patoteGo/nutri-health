@@ -3,6 +3,10 @@ import React from "react";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { Button } from "@/components/ui/button";
 import { signIn, signOut, useSession } from "next-auth/react"; // For authentication actions
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { User as UserIcon } from "lucide-react"; // fallback icon
+import Image from "next/image";
+
 
 import { usePathname } from "next/navigation";
 import {
@@ -72,16 +76,48 @@ const Header: React.FC = () => {
             Login
           </Button>
         )}
-        {/* Optionally, show Logout if authenticated
-        {status === "authenticated" && (
-          <Button
-            variant="outline"
-            onClick={() => signOut()}
-            data-testid="logout-button"
-          >
-            Logout
-          </Button>
-        )} */}
+        {/* Show profile avatar and dropdown if authenticated */}
+        {status === "authenticated" && session?.user && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className="rounded-full border border-muted-foreground w-9 h-9 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-primary"
+                data-testid="profile-avatar"
+                aria-label="Profile menu"
+              >
+                {session.user.image ? (
+  <Image
+    src={session.user.image}
+    alt={session.user.name || session.user.email || "Profile"}
+    width={32}
+    height={32}
+    className="w-8 h-8 rounded-full object-cover"
+    onError={(e) => {
+      // Hide image if error, fallback to icon
+      (e.target as HTMLImageElement).style.display = 'none';
+    }}
+    unoptimized // Remove if you want to use optimization only for allowed domains
+  />
+) : (
+  <UserIcon className="w-6 h-6 text-muted-foreground" />
+)}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-[180px]">
+              <DropdownMenuLabel>
+                {session.user.name || session.user.email || "Profile"}
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => signOut()}
+                data-testid="signout-button"
+                className="cursor-pointer"
+              >
+                Sign out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
     </header>
   );
