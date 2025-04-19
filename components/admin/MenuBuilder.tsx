@@ -31,6 +31,8 @@ const categories = ["Breakfast", "Lunch", "Dinner", "Snack"];
 
 
 // MenuBuilder now requires personId as a prop
+import { useTranslation } from "react-i18next";
+
 export default function MenuBuilder({
   menus,
   onMenusChange,
@@ -40,6 +42,7 @@ export default function MenuBuilder({
   onMenusChange: (menus: Menu[]) => void;
   personId: string;
 }) {
+  const { t } = useTranslation();
   const [menuName, setMenuName] = useState("");
   const [category, setCategory] = useState(categories[0]);
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
@@ -102,29 +105,29 @@ export default function MenuBuilder({
       setCategory(categories[0]);
       setIngredients([]);
       queryClient.invalidateQueries({ queryKey: ['menus'] });
-      toast.success('Menu saved successfully!');
+      toast.success(t('menu_saved_success', 'Menu saved successfully!'));
     },
     onError: (error: any) => {
-      toast.error(error?.message || 'Failed to save menu');
+      toast.error(error?.message || t('menu_save_failed', 'Failed to save menu'));
     },
   });
 
   function addMenu() {
     // Check for missing fields and show toast for each case
     if (!menuName) {
-      toast.error('Please enter a menu name.');
+      toast.error(t('enter_menu_name', 'Please enter a menu name.'));
       return;
     }
     if (!category) {
-      toast.error('Please select a category.');
+      toast.error(t('select_category', 'Please select a category.'));
       return;
     }
     if (ingredients.length === 0) {
-      toast.error('Please add at least one ingredient.');
+      toast.error(t('add_at_least_one_ingredient', 'Please add at least one ingredient.'));
       return;
     }
     if (!personId) {
-      toast.error('Please select a person before adding a menu.');
+      toast.error(t('select_person_first', 'Please select a person before adding a menu.'));
       return;
     }
     menuMutation.mutate({ name: menuName, category, personId, ingredients });
@@ -136,10 +139,10 @@ export default function MenuBuilder({
 
   return (
     <div className="border rounded p-4 mb-6 bg-muted/20">
-      <h2 className="text-xl font-semibold mb-2">Menu Builder</h2>
+      <h2 className="text-xl font-semibold mb-2">{t('menu_builder_title', 'Menu Builder')}</h2>
       <div className="flex flex-col gap-2 mb-4">
         <Input
-          placeholder="Menu name"
+          placeholder={t('menu_name', 'Menu name')}
           value={menuName}
           onChange={e => setMenuName(e.target.value)}
           className="w-full"
@@ -150,14 +153,14 @@ export default function MenuBuilder({
           </SelectTrigger>
           <SelectContent>
             {categories.map(cat => (
-              <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+              <SelectItem key={cat} value={cat}>{t(cat.toLowerCase(), cat)}</SelectItem>
             ))}
           </SelectContent>
         </Select>
         <div className="flex gap-2 items-start">
           <div className="flex-1 relative">
             <Input
-              placeholder="Search ingredient..."
+              placeholder={t('search_ingredient', 'Search ingredient...')}
               value={selectedIngredient ? selectedIngredient.name : ingredientQuery}
               onChange={e => {
                 setIngredientQuery(e.target.value);
@@ -167,7 +170,7 @@ export default function MenuBuilder({
               autoComplete="off"
             />
             {ingredientLoading && (
-              <div className="absolute left-0 top-full bg-white border w-full z-10 p-2 text-xs">Loading...</div>
+              <div className="absolute left-0 top-full bg-white border w-full z-10 p-2 text-xs">{t('loading', 'Loading...')}</div>
             )}
             {ingredientError && (
               <div className="absolute left-0 top-full bg-destructive text-destructive-foreground border w-full z-10 p-2 text-xs">{ingredientError}</div>
@@ -195,10 +198,10 @@ export default function MenuBuilder({
           <Input
             type="number"
             placeholder={
-              selectedIngredient?.unit === 'GRAM' ? 'Weight (g)'
-              : selectedIngredient?.unit === 'ML' ? 'Volume (ml)'
-              : selectedIngredient?.unit ? 'Quantity'
-              : 'Amount'
+              selectedIngredient?.unit === 'GRAM' ? t('weight_in_grams', 'Weight in grams')
+              : selectedIngredient?.unit === 'ML' ? t('volume_in_milliliters', 'Volume in milliliters')
+              : selectedIngredient?.unit ? t('quantity_with_unit', `Quantity (${selectedIngredient.unit.toLowerCase()})`)
+              : t('amount', 'Amount')
             }
             value={ingredientWeight || ""}
             onChange={e => setIngredientWeight(
@@ -221,10 +224,10 @@ export default function MenuBuilder({
               ].includes(selectedIngredient.unit || '') ? 'numeric' : 'decimal'
             }
             aria-label={
-              selectedIngredient?.unit === 'GRAM' ? 'Weight in grams'
-              : selectedIngredient?.unit === 'ML' ? 'Volume in milliliters'
-              : selectedIngredient?.unit ? `Quantity (${selectedIngredient.unit.toLowerCase()})`
-              : 'Amount'
+              selectedIngredient?.unit === 'GRAM' ? t('weight_in_grams', 'Weight in grams')
+              : selectedIngredient?.unit === 'ML' ? t('volume_in_milliliters', 'Volume in milliliters')
+              : selectedIngredient?.unit ? t('quantity_with_unit', `Quantity (${selectedIngredient.unit.toLowerCase()})`)
+              : t('amount', 'Amount')
             }
           />
           <Button
@@ -232,15 +235,15 @@ export default function MenuBuilder({
             onClick={addIngredient}
             variant="secondary"
             disabled={!selectedIngredient || ingredientWeight <= 0 || isDuplicate}
-            title={isDuplicate ? 'This ingredient is already in the list' : ''}
+            title={isDuplicate ? t('ingredient_already_in_list', 'This ingredient is already in the list') : ''}
           >
-            Add Ingredient
+            {t('add_ingredient', 'Add Ingredient')}
           </Button>
         </div>
         {isDuplicate && (
           <div className="text-destructive text-sm mt-1 flex items-center gap-1" role="alert">
             <svg width="16" height="16" fill="none" viewBox="0 0 24 24" aria-hidden="true"><path stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01m-6.938 2h13.856c1.54 0 2.502-1.667 1.732-3L13.732 5c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-            This ingredient is already on the list.
+            {t('ingredient_already_in_list', 'This ingredient is already on the list.')}
           </div>
         )}
         <ul className="list-disc ml-6 mt-2 text-sm">
@@ -268,19 +271,19 @@ export default function MenuBuilder({
           ))}
         </ul>
         <Button type="button" onClick={addMenu} className="mt-2" disabled={!menuName || ingredients.length === 0}>
-          Add Menu
+          {t('add_menu', 'Add Menu')}
         </Button>
       </div>
       <div>
-        <h3 className="font-medium mb-1">Menus</h3>
-        {menus.length === 0 && <div className="text-muted-foreground text-sm">No menus yet.</div>}
+        <h3 className="font-medium mb-1">{t('menus', 'Menus')}</h3>
+        {menus.length === 0 && <div className="text-muted-foreground text-sm">{t('no_menus_yet', 'No menus yet.')}</div>}
         <ul className="space-y-2">
           {menus.map(menu => (
             <li key={menu.id} className="border rounded p-2 bg-white flex flex-col gap-1">
               <div className="flex justify-between items-center">
                 <span className="font-semibold">{menu.name}</span>
                 <Button size="sm" variant="destructive" onClick={() => removeMenu(menu.id)}>
-                  Remove
+                  {t('remove', 'Remove')}
                 </Button>
               </div>
               <div className="text-xs text-muted-foreground">{menu.category}</div>
@@ -296,3 +299,4 @@ export default function MenuBuilder({
     </div>
   );
 }
+

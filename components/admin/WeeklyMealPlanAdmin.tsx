@@ -1,6 +1,7 @@
 "use client";
 // Admin dashboard UI for editing weekly meal plans
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { Button } from "../../components/ui/button";
 import MenuBuilder from "./MenuBuilder";
@@ -16,6 +17,7 @@ interface WeeklyMealPlanAdminProps {
 }
 
 export default function WeeklyMealPlanAdmin({ userEmail }: WeeklyMealPlanAdminProps) {
+  const { t } = useTranslation();
   const { data: session } = useSession();
   const [selectedPerson, setSelectedPerson] = useState<string>("");
   const [weekStart, setWeekStart] = useState<Date>(getWeekStart(new Date()));
@@ -71,19 +73,19 @@ export default function WeeklyMealPlanAdmin({ userEmail }: WeeklyMealPlanAdminPr
   // UI rendering
   return (
     <div className="max-w-5xl mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Admin: Weekly Meal Plan</h1>
+      <h1 className="text-2xl font-bold mb-4">{t('admin_weekly_meal_plan', 'Admin: Weekly Meal Plan')}</h1>
       <div className="flex gap-4 mb-4 items-end">
         <div className="flex flex-col w-64">
-          <label htmlFor="person-select" className="mb-1 text-sm font-medium">Select person</label>
+          <label htmlFor="person-select" className="mb-1 text-sm font-medium">{t('select_person', 'Select person')}</label>
           <Select value={selectedPerson} onValueChange={setSelectedPerson} disabled={peopleLoading || !!peopleError || !people?.length}>
             <SelectTrigger className="w-full" id="person-select">
-              <SelectValue placeholder={peopleLoading ? "Loading..." : peopleError ? "Error loading users" : "Select person"} />
+              <SelectValue placeholder={peopleLoading ? t('loading', 'Loading...') : peopleError ? t('error_loading_users', 'Error loading users') : t('choose_person', 'Select person')} />
             </SelectTrigger>
             <SelectContent>
-              {peopleLoading && <div className="px-4 py-2 text-muted-foreground">Loading...</div>}
-              {peopleError && <div className="px-4 py-2 text-destructive">Error loading users</div>}
+              {peopleLoading && <div className="px-4 py-2 text-muted-foreground">{t('loading', 'Loading...')}</div>}
+              {peopleError && <div className="px-4 py-2 text-destructive">{t('error_loading_users', 'Error loading users')}</div>}
               {!peopleLoading && !peopleError && (!people || people.length === 0) && (
-                <div className="px-4 py-2 text-muted-foreground">No users found</div>
+                <div className="px-4 py-2 text-muted-foreground">{t('no_users_found', 'No users found')}</div>
               )}
               {people && people.length > 0 && people.map((p: any) => (
                 <SelectItem key={p.id} value={p.id}>{p.name || p.email}</SelectItem>
@@ -93,7 +95,7 @@ export default function WeeklyMealPlanAdmin({ userEmail }: WeeklyMealPlanAdminPr
         </div>
         {/* Week picker could be improved */}
         <div className="flex flex-col">
-          <label htmlFor="week-picker" className="mb-1 text-sm font-medium">Week start</label>
+          <label htmlFor="week-picker" className="mb-1 text-sm font-medium">{t('week_start', 'Week start')}</label>
           <input
             id="week-picker"
             type="date"
@@ -105,19 +107,21 @@ export default function WeeklyMealPlanAdmin({ userEmail }: WeeklyMealPlanAdminPr
       </div>
       {selectedPerson && people && (
         <div className="mb-4 text-base">
-          Managing meals for: <span className="font-semibold">{people.find((p: any) => p.id === selectedPerson)?.name || people.find((p: any) => p.id === selectedPerson)?.email}</span>
+          {t('managing_meals_for', 'Managing meals for:')} <span className="font-semibold">{people.find((p: any) => p.id === selectedPerson)?.name || people.find((p: any) => p.id === selectedPerson)?.email}</span>
         </div>
       )}
       {/* Menu Builder */}
-      <MenuBuilder menus={menus} onMenusChange={setMenus} personId={selectedPerson} />
+      <section className="mb-6">
+        <MenuBuilder menus={menus} onMenusChange={setMenus} personId={selectedPerson} />
+      </section>
       {/* TODO: Add drag-and-drop assignment of menus to week days here */}
       {editPlan && (
         <table className="w-full border mb-4">
           <thead>
             <tr>
-              <th>Day</th>
+              <th>{t('day', 'Day')}</th>
               {mealMoments.map((moment: MealMoment) => (
-                <th key={moment}>{moment}</th>
+                <th key={moment}>{t(`meal_${moment}`, moment)}</th>
               ))}
             </tr>
           </thead>
@@ -156,10 +160,10 @@ export default function WeeklyMealPlanAdmin({ userEmail }: WeeklyMealPlanAdminPr
         })}
         disabled={!selectedPerson || !editPlan || mutation.isLoading}
       >
-        Save
+        {t('save', 'Save')}
       </Button>
-      {mutation.isError && <div className="text-red-500">Error saving plan</div>}
-      {mutation.isSuccess && <div className="text-green-600">Saved!</div>}
+      {mutation.isError && <div className="text-red-500">{t('error_saving_plan', 'Error saving plan')}</div>}
+      {mutation.isSuccess && <div className="text-green-600">{t('saved', 'Saved!')}</div>}
     </div>
   );
 }
