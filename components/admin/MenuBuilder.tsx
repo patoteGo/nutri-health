@@ -186,7 +186,7 @@ export default function MenuBuilder({
                       setIngredientQuery(opt.name);
                     }}
                   >
-                    <span className="font-medium">{opt.name}</span>
+                    <span className="font-medium">{t(`ingredient_${opt.name.toLowerCase().replace(/\s+/g, '_')}`, opt.name)}</span>
                     <span className="text-xs text-muted-foreground">
                       {opt.carbs}g carbs, {opt.protein}g protein, {opt.fat}g fat / 100g
                     </span>
@@ -250,14 +250,19 @@ export default function MenuBuilder({
           {ingredients.map((ing, idx) => (
             <li key={idx} className="flex items-center gap-3 py-2">
               <div className="flex-1 flex flex-col">
-                <span>{ing.name} — {ing.weight}{
+                <span>{t(`ingredient_${ing.name.toLowerCase().replace(/\s+/g, '_')}`, ing.name)} — {ing.weight}{
                   ing.unit === 'GRAM' ? 'g'
                   : ing.unit === 'ML' ? 'ml'
                   : ing.unit ? ` (${ing.unit.toLowerCase()})`
                   : ''
                 }</span>
                 <span className="text-xs text-muted-foreground">
-                  {ing.carbs}g carbs, {ing.protein}g protein, {ing.fat}g fat / {ing.unit === 'GRAM' ? '100g' : ing.unit === 'ML' ? '100ml' : 'unit'}
+                  {t('ingredient_nutrition_info', {
+                    carbs: ing.carbs,
+                    protein: ing.protein,
+                    fat: ing.fat,
+                    unit: ing.unit === 'GRAM' ? '100g' : ing.unit === 'ML' ? '100ml' : 'unit'
+                  })}
                 </span>
               </div>
               <img
@@ -289,7 +294,7 @@ export default function MenuBuilder({
               <div className="text-xs text-muted-foreground">{menu.category}</div>
               <ul className="text-xs ml-4">
                 {menu.ingredients.map((ing, idx) => (
-                  <li key={idx}>{ing.name} — {ing.weight}g</li>
+                  <li key={idx}>{t(`ingredient_${ing.name.toLowerCase().replace(/\s+/g, '_')}`, ing.name)} — {ing.weight}g</li>
                 ))}
               </ul>
             </li>

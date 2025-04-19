@@ -72,6 +72,14 @@
   "enter_menu_name": "Por favor, insira o nome do cardápio.",
   "select_category": "Por favor, selecione uma categoria.",
   "add_at_least_one_ingredient": "Adicione pelo menos um ingrediente.",
-  "select_person_first": "Selecione uma pessoa antes de adicionar um cardápio."
+  "select_person_first": "Selecione uma pessoa antes de adicionar um cardápio.",
+  "ingredient_egg": "Ovo",
+  "ingredient_chicken_breast": "Peito de Frango",
+  "ingredient_apple": "Maçã",
+  "ingredient_rice": "Arroz",
+  "ingredient_brown_rice": "Arroz Integral",
+  "ingredient_quinoa": "Quinoa",
+  "ingredient_almond": "Amêndoa",
+  "ingredient_nutrition_info": "{{carbs}}g carboidratos, {{protein}}g proteína, {{fat}}g gordura / {{unit}}"
 
 }

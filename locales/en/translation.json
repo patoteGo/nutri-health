@@ -72,6 +72,14 @@
   "enter_menu_name": "Please enter a menu name.",
   "select_category": "Please select a category.",
   "add_at_least_one_ingredient": "Please add at least one ingredient.",
-  "select_person_first": "Please select a person before adding a menu."
+  "select_person_first": "Please select a person before adding a menu.",
+  "ingredient_egg": "Egg",
+  "ingredient_chicken_breast": "Chicken Breast",
+  "ingredient_apple": "Apple",
+  "ingredient_rice": "Rice",
+  "ingredient_brown_rice": "Brown Rice",
+  "ingredient_quinoa": "Quinoa",
+  "ingredient_almond": "Almond",
+  "ingredient_nutrition_info": "{{carbs}}g carbs, {{protein}}g protein, {{fat}}g fat / {{unit}}"
 
 }

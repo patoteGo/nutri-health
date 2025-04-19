@@ -19,16 +19,22 @@ global.fetch = vi.fn(async (url) => {
   throw new Error("Unexpected fetch url: " + url);
 });
 
-function renderWithQueryClient(ui: React.ReactElement) {
+import { I18nextProvider } from 'react-i18next';
+import i18n from '@/tests/testI18n';
+
+function renderWithProviders(ui: React.ReactElement) {
   const queryClient = new QueryClient();
   return render(
-    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>
+    <I18nextProvider i18n={i18n}>
+      <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>
+    </I18nextProvider>
   );
 }
 
+
 describe("MenuBuilder ingredient adding", () => {
   it("adds an ingredient and displays it in the list", async () => {
-    renderWithQueryClient(<MenuBuilder menus={[]} onMenusChange={() => {}} />);
+    renderWithProviders(<MenuBuilder menus={[]} onMenusChange={() => {}} personId="1" />);
     const input = screen.getByPlaceholderText(/search ingredient/i);
     fireEvent.change(input, { target: { value: "brown" } });
     await waitFor(() => {
@@ -41,8 +47,24 @@ describe("MenuBuilder ingredient adding", () => {
     expect(screen.getByText(/Brown Rice — 50g/)).toBeInTheDocument();
   });
 
+  it("shows ingredient name in Portuguese when i18n language is 'pt'", async () => {
+    i18n.changeLanguage('pt');
+    renderWithProviders(<MenuBuilder menus={[]} onMenusChange={() => {}} personId="1" />);
+    const input = screen.getByPlaceholderText(/search ingredient/i);
+    fireEvent.change(input, { target: { value: "egg" } });
+    await waitFor(() => {
+      expect(screen.getByText("Ovo")).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByText("Ovo"));
+    const qtyInput = screen.getByPlaceholderText(/quantity/i);
+    fireEvent.change(qtyInput, { target: { value: "2" } });
+    fireEvent.click(screen.getByText(/add ingredient/i));
+    expect(screen.getByText(/Ovo — 2/)).toBeInTheDocument();
+    i18n.changeLanguage('en'); // reset
+  });
+
   it("prevents adding duplicate ingredients and shows warning", async () => {
-    renderWithQueryClient(<MenuBuilder menus={[]} onMenusChange={() => {}} />);
+    renderWithProviders(<MenuBuilder menus={[]} onMenusChange={() => {}} personId="1" />);
     const input = screen.getByPlaceholderText(/search ingredient/i);
     fireEvent.change(input, { target: { value: "egg" } });
     await waitFor(() => {
@@ -63,7 +85,7 @@ describe("MenuBuilder ingredient adding", () => {
   });
 
   it("handles edge case: add with zero or negative weight", async () => {
-    renderWithQueryClient(<MenuBuilder menus={[]} onMenusChange={() => {}} />);
+    renderWithProviders(<MenuBuilder menus={[]} onMenusChange={() => {}} personId="1" />);
     const input = screen.getByPlaceholderText(/search ingredient/i);
     fireEvent.change(input, { target: { value: "brown" } });
     await waitFor(() => {
