@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
+import { MealMoment } from '@prisma/client';
 
 const IngredientSchema = z.object({
   id: z.string(),
@@ -28,11 +29,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid menu data', details: parsed.error.errors }, { status: 400 });
     }
     const { name, category, personId, ingredients } = parsed.data;
+    const upperCategory = category.toUpperCase();
+    if (!(upperCategory in MealMoment)) {
+      return NextResponse.json({ error: `Invalid meal moment: ${category}` }, { status: 400 });
+    }
     const menu = await prisma.meal.create({
       data: {
         userId: personId,
         date: new Date(), // or pass from client
-        moment: category.toUpperCase(), // expects enum value
+        moment: upperCategory as MealMoment,
         parts: ingredients.map(ing => ({
           id: ing.id,
           name: ing.name,

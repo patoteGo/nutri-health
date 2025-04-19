@@ -52,6 +52,7 @@ interface DroppableMealSlotProps {
   day: string;
   mealMoment: string;
   menus: Menu[];
+  onDropMenu: (menuId: string, fromDay: string, fromMoment: string) => void;
 }
 
 const DroppableMealSlot: React.FC<DroppableMealSlotProps> = React.memo(({ day, mealMoment, menus }) => {
@@ -126,15 +127,17 @@ const WeeklyMealKanban: React.FC<WeeklyMealKanbanProps> = ({ menus, onMenusChang
                         onDropMenu={(menuId, fromDay, fromMoment) => {
                           // Only allow drop if mealMoment matches menu's category
                           const menu = board[fromDay][fromMoment].find(m => m.id === menuId);
-                          if (!menu || menu.category.toUpperCase() !== moment) return;
+                          if (!menu || menu.category?.toUpperCase() !== moment) return;
                           // Remove from old slot
                           const newBoard = JSON.parse(JSON.stringify(board));
-                          newBoard[fromDay][fromMoment] = newBoard[fromDay][fromMoment].filter(m => m.id !== menuId);
+                          newBoard[fromDay][fromMoment] = newBoard[fromDay][fromMoment].filter((m: Menu) => m.id !== menuId);
                           // Add to new slot
                           newBoard[day][moment].push(menu);
                           
                           // Flatten board to menus array for parent
-                          const newMenus = Object.values(newBoard).flatMap(dayObj => Object.values(dayObj).flat());
+                          const newMenus = Object.values(newBoard).flatMap(dayObj =>
+  Object.values(dayObj as Record<string, Menu[]>).flat()
+) as Menu[];
                           onMenusChange(newMenus);
                         }}
                       />

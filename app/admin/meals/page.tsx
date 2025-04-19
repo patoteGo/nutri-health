@@ -13,5 +13,5 @@ export default async function AdminMealsPage() {
   // TODO: Replace with DB check for isAdmin
   // For now, allow all authenticated users
   // You will implement isAdmin check in middleware/api soon
-  return <WeeklyMealPlanAdmin userEmail={session.user.email} />;
+  return <WeeklyMealPlanAdmin />;
 }

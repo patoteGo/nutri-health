@@ -35,19 +35,27 @@ export async function POST(req: NextRequest) {
     return new Response("Invalid data", { status: 400 });
   }
   const { person, weekStart, meals } = parse.data;
-  const plan = await prisma.weeklyMealPlan.upsert({
+  const existing = await prisma.weeklyMealPlan.findFirst({
     where: {
-      userId_weekStart: {
-        userId: person,
-        weekStart: new Date(weekStart),
-      },
-    },
-    update: { meals },
-    create: {
       userId: person,
       weekStart: new Date(weekStart),
-      meals,
     },
   });
+
+  let plan;
+  if (existing) {
+    plan = await prisma.weeklyMealPlan.update({
+      where: { id: existing.id },
+      data: { meals },
+    });
+  } else {
+    plan = await prisma.weeklyMealPlan.create({
+      data: {
+        userId: person,
+        weekStart: new Date(weekStart),
+        meals,
+      },
+    });
+  }
   return Response.json(plan);
 }

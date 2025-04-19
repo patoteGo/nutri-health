@@ -2,11 +2,24 @@
 import { z } from "zod";
 
 // Shared Menu type for admin/meal plan components
+export interface Ingredient {
+  id: string;
+  name: string;
+  carbs: number;
+  protein: number;
+  fat: number;
+  imageUrl?: string | null;
+  unit?: string | null;
+  weight: number;
+}
+
 export interface Menu {
   id: string;
+  name: string;
   category?: string;
   assignedDay?: string;
   assignedMoment?: string;
+  ingredients?: Ingredient[];
   [key: string]: unknown;
 }
 

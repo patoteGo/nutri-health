@@ -15,7 +15,7 @@ import WeeklyMealKanban from "./WeeklyMealKanban";
 // Types
 
 
-export default function WeeklyMealPlanAdmin({}: WeeklyMealPlanAdminProps) {
+export default function WeeklyMealPlanAdmin() {
   // ...existing code
   // Ideally, define a Menu type elsewhere and import it
 
@@ -112,7 +112,7 @@ mutationFn: async (newPlan: unknown) => {
           <label htmlFor="person-select" className="mb-1 text-sm font-medium">{t('select_person', 'Select person')}</label>
           <Select value={selectedPerson} onValueChange={setSelectedPerson} disabled={peopleLoading || !!peopleError || !people?.length}>
             <SelectTrigger className="w-full" id="person-select">
-              <SelectValue placeholder={peopleLoading ? t('loading', 'Loading...') : peopleError ? t('error_loading_users', 'Error loading users') : t('choose_person', 'Select person')} />
+              <SelectValue placeholder={mutation.isPending ? t('saving', 'Saving...') : t('save', 'Save')} />
             </SelectTrigger>
             <SelectContent>
               {peopleLoading && <div className="px-4 py-2 text-muted-foreground">{t('loading', 'Loading...')}</div>}
@@ -148,10 +148,9 @@ mutationFn: async (newPlan: unknown) => {
         <section className="mb-6">
           <MenuBuilder menus={menus} onMenusChange={setMenus} personId={selectedPerson} />
         </section>
-        {editPlan && (
+        {typeof editPlan === 'object' && editPlan !== null && (
           <WeeklyMealKanban
             menus={menus}
-            weekStart={weekStart}
             onMenusChange={setMenus}
           />
         )}
@@ -160,14 +159,13 @@ mutationFn: async (newPlan: unknown) => {
         onClick={() => mutation.mutate({
           person: selectedPerson,
           weekStart: weekStart.toISOString(),
-          // Type guard for editPlan
           meals: (editPlan && typeof editPlan === "object" && editPlan !== null && 'meals' in editPlan) ? (editPlan as { meals: unknown }).meals : undefined,
         })}
-        disabled={!selectedPerson || !editPlan || mutation.isLoading}
+        disabled={!selectedPerson || !editPlan || mutation.isPending}
       >
-        {t('save', 'Save')}
+        {mutation.isPending ? t('saving', 'Saving...') : t('save', 'Save')}
       </Button>
-      {mutation.isError && <div className="text-red-500">{t('error_saving_plan', 'Error saving plan')}</div>}
+      {mutation.isError && <div className="text-red-500">{String(t('error_saving_plan', 'Error saving plan'))}</div>}
       {mutation.isSuccess && <div className="text-green-600">{t('saved', 'Saved!')}</div>}
     </div>
   );

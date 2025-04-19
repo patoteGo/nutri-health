@@ -7,6 +7,7 @@ import { Tooltip, TooltipTrigger, TooltipContent } from "../../components/ui/too
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "../../components/ui/dialog";
 import { useDroppable } from "@dnd-kit/core";
 import DraggableMenuCard from "./DraggableMenuCard";
+import type { Menu, Ingredient } from "@/lib/types";
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { z } from "zod";
 
@@ -21,15 +22,10 @@ const IngredientSchema = z.object({
   imageUrl: z.string().optional().nullable(),
   unit: z.string().optional().nullable(),
 });
-type Ingredient = z.infer<typeof IngredientSchema> & { weight: number }; // includes imageUrl
 
 
-interface Menu {
-  id: string;
-  name: string;
-  category: string;
-  ingredients: Ingredient[];
-}
+
+
 
 const categories = ["Breakfast", "Lunch", "Dinner", "Snack"];
 
@@ -37,7 +33,7 @@ const categories = ["Breakfast", "Lunch", "Dinner", "Snack"];
 // MenuBuilder now requires personId as a prop
 import { useTranslation } from "react-i18next";
 
-export default function MenuBuilder({
+function MenuBuilder({
   menus,
   onMenusChange,
   personId,
@@ -80,7 +76,7 @@ export default function MenuBuilder({
       .finally(() => setIngredientLoading(false));
   }, [ingredientQuery]);
 
-  const isDuplicate = selectedIngredient && ingredients.some(ing => ing.id === selectedIngredient.id);
+  const isDuplicate = Boolean(selectedIngredient && ingredients.some(ing => ing.id === selectedIngredient.id));
 
   function addIngredient() {
     if (!selectedIngredient || ingredientWeight <= 0) return;
@@ -331,68 +327,68 @@ export default function MenuBuilder({
         {/* Droppable area for unassigned menus */}
         {/* Droppable area for unassigned menus */}
         {/* Move useDroppable to top-level in component for React Hook rules compliance */}
-        <ul
-          ref={unassignedSetNodeRef}
-          className={
-            "space-y-2 min-h-[48px] p-1 rounded border border-dashed " +
-            (unassignedIsOver ? "bg-accent/20 border-primary" : "border-muted-foreground/20 bg-white")
-          }
-          style={{ transition: 'background 0.2s, border-color 0.2s' }}
-        >
-          {unassignedMenus.length === 0 && (
-            <div className="text-muted-foreground text-sm">{t('no_menus_yet', 'No menus yet.')}</div>
-          )}
-          {unassignedMenus.map(menu => (
-            <DraggableMenuCard
-              key={menu.id}
-              menu={menu}
-              day="unassigned"
-              mealMoment="unassigned"
-              onDelete={() => deleteMenuMutation.mutate(menu.id)}
-            >
-              <div className="flex justify-between items-center">
-                <span className="font-semibold">{menu.name}</span>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button size="icon" variant="ghost" aria-label="Delete menu" title="Delete menu">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-destructive"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></svg>
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Delete Menu</DialogTitle>
-                      <DialogDescription>
-                        Are you sure you want to delete this menu? This action cannot be undone.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                      <DialogClose asChild>
-                        <Button variant="outline">Cancel</Button>
-                      </DialogClose>
-                      <Button
-                        variant="destructive"
-                        onClick={() => deleteMenuMutation.mutate(menu.id)}
-                        disabled={deleteMenuMutation.isLoading}
-                      >
-                        {deleteMenuMutation.isLoading ? t('deleting', 'Deleting...') : t('delete', 'Delete')}
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              </div>
-              <div className="text-xs text-muted-foreground">{menu.category}</div>
-              <ul className="text-xs ml-4">
-                    {menu.ingredients.map((ing, idx) => (
-                      <li key={idx}>{t(`ingredient_${ing.name.toLowerCase().replace(/\s+/g, '_')}`, ing.name)} — {ing.weight}g</li>
-                    ))}
-                  </ul>
-                </DraggableMenuCard>
-              ))}
-            </ul>
-      </div>
-
-    </div>
-  );
+         <ul
+           ref={unassignedSetNodeRef}
+           className={
+             "space-y-2 min-h-[48px] p-1 rounded border border-dashed " +
+             (unassignedIsOver ? "bg-accent/20 border-primary" : "border-muted-foreground/20 bg-white")
+           }
+           style={{ transition: 'background 0.2s, border-color 0.2s' }}
+         >
+           {unassignedMenus.length === 0 && (
+             <div className="text-muted-foreground text-sm">{t('no_menus_yet', 'No menus yet.')}</div>
+           )}
+           {unassignedMenus.map(menu => (
+             <li key={menu.id} className="mb-4">
+               <DraggableMenuCard
+                 menu={menu}
+                 day="unassigned"
+                 mealMoment="unassigned"
+                 onDelete={() => deleteMenuMutation.mutate(menu.id)}
+               />
+               <div className="flex justify-between items-center">
+                 <span className="font-semibold">{menu.name}</span>
+                 <Dialog>
+                   <DialogTrigger asChild>
+                     <Button size="icon" variant="ghost" aria-label="Delete menu" title="Delete menu">
+                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-destructive"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></svg>
+                     </Button>
+                   </DialogTrigger>
+                   <DialogContent>
+                     <DialogHeader>
+                       <DialogTitle>Delete Menu</DialogTitle>
+                       <DialogDescription>
+                         Are you sure you want to delete this menu? This action cannot be undone.
+                       </DialogDescription>
+                     </DialogHeader>
+                     <DialogFooter>
+                       <DialogClose asChild>
+                         <Button variant="outline">Cancel</Button>
+                       </DialogClose>
+                       <Button
+                         variant="destructive"
+                         onClick={() => deleteMenuMutation.mutate(menu.id)}
+                         disabled={deleteMenuMutation.isPending}
+                       >
+                         {deleteMenuMutation.isPending ? t('deleting', 'Deleting...') : t('delete', 'Delete')}
+                       </Button>
+                     </DialogFooter>
+                   </DialogContent>
+                 </Dialog>
+               </div>
+               <div className="text-xs text-muted-foreground">{menu.category}</div>
+               <ul className="text-xs ml-4">
+                 {(menu.ingredients ?? []).map((ing: Ingredient, idx: number) => (
+                   <li key={idx}>{t(`ingredient_${ing.name.toLowerCase().replace(/\s+/g, '_')}`, ing.name)} — {ing.weight}g</li>
+                 ))}
+               </ul>
+             </li>
+           ))}
+         </ul>
+       </div>
+     </div>
+    );
 }
 
 MenuBuilder.displayName = "MenuBuilder";
+export default MenuBuilder;
