@@ -128,7 +128,7 @@ export default function MenuBuilder({
       if (!res.ok) throw new Error('Failed to save menu');
       return res.json();
     },
-    onSuccess: (menu) => {
+    onSuccess: (menu: Menu) => {
       // Use the real menu object returned from the backend (with DB id)
       onMenusChange([...menus, menu]);
       setMenuName("");
@@ -389,7 +389,6 @@ export default function MenuBuilder({
                 </DraggableMenuCard>
               ))}
             </ul>
-          );
       </div>
 
     </div>

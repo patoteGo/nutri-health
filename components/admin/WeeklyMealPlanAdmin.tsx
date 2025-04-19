@@ -18,13 +18,7 @@ import WeeklyMealKanban from "./WeeklyMealKanban";
 export default function WeeklyMealPlanAdmin({}: WeeklyMealPlanAdminProps) {
   // ...existing code
   // Ideally, define a Menu type elsewhere and import it
-interface Menu {
-  id: string;
-  category?: string;
-  assignedDay?: string;
-  assignedMoment?: string;
-  [key: string]: unknown;
-}
+
 const [menus, setMenus] = useState<Menu[]>([]);
 
 type MenuPlan = {
@@ -36,7 +30,7 @@ type MenuPlan = {
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!active || !over) return;
-    const [menuId, fromDay, fromMoment] = active.id.toString().split("|");
+    const [menuId] = active.id.toString().split("|");
     // If dropped over Menus list (unassigned), over.id === 'unassigned'
     if (over.id === 'unassigned') {
       const menu = menus.find(m => m.id === menuId);
