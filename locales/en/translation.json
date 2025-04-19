@@ -32,5 +32,13 @@
   "select_week": "Select Week",
   "choose_week": "Choose a week",
   "meal_option": "Meal Option",
-  "choose_option": "Choose option"
+  "choose_option": "Choose option",
+  "meal_parts": "Meal Parts",
+  "food_name": "Name",
+  "food_name_ph": "e.g. Chicken Breast",
+  "grams": "Grams",
+  "grams_ph": "g",
+  "image": "Image",
+  "add_meal_part": "Add Meal Part",
+  "preview": "Preview"
 }

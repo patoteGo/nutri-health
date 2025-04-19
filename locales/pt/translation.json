@@ -32,5 +32,13 @@
   "select_week": "Selecionar Semana",
   "choose_week": "Escolha uma semana",
   "meal_option": "Opção de Refeição",
-  "choose_option": "Escolha a opção"
+  "choose_option": "Escolha a opção",
+  "meal_parts": "Partes da Refeição",
+  "food_name": "Nome",
+  "food_name_ph": "ex: Peito de Frango",
+  "grams": "Gramas",
+  "grams_ph": "g",
+  "image": "Imagem",
+  "add_meal_part": "Adicionar Parte da Refeição",
+  "preview": "Pré-visualização"
 }
