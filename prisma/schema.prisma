@@ -49,3 +49,12 @@ model WeeklyMealPlan {
 }
 
 // MealData: { parts: [{ name, grams, imageUrl }] }
+
+model Ingredient {
+  id      String  @id @default(uuid())
+  name    String  @unique
+  carbs   Float   // grams per 100g
+  protein Float   // grams per 100g
+  fat     Float   // grams per 100g
+  // Optionally: fiber, calories, etc.
+}

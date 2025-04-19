@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { z } from "zod";
 import { Button } from "../../components/ui/button";
+import MenuBuilder from "./MenuBuilder";
 import { Select, SelectItem, SelectContent, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { getWeekStart, getWeekDays, mealMoments } from "../../lib/weekUtils";
 import { WeeklyMealPlanSchema, MealMoment } from "../../lib/types";
@@ -64,6 +65,9 @@ export default function WeeklyMealPlanAdmin({ userEmail }: WeeklyMealPlanAdminPr
     },
   });
 
+  // Menu builder state
+  const [menus, setMenus] = useState<any[]>([]); // TODO: Use Menu type
+
   // UI rendering
   return (
     <div className="max-w-5xl mx-auto p-4">
@@ -104,6 +108,9 @@ export default function WeeklyMealPlanAdmin({ userEmail }: WeeklyMealPlanAdminPr
           Managing meals for: <span className="font-semibold">{people.find((p: any) => p.id === selectedPerson)?.name || people.find((p: any) => p.id === selectedPerson)?.email}</span>
         </div>
       )}
+      {/* Menu Builder */}
+      <MenuBuilder menus={menus} onMenusChange={setMenus} />
+      {/* TODO: Add drag-and-drop assignment of menus to week days here */}
       {editPlan && (
         <table className="w-full border mb-4">
           <thead>
