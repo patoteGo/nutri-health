@@ -96,10 +96,8 @@ const DroppableMealSlot: React.FC<DroppableMealSlotProps> = ({ day, mealMoment, 
 
 // --- Main Kanban Component ---
 const WeeklyMealKanban: React.FC<WeeklyMealKanbanProps> = ({ menus, weekStart, onMenusChange }) => {
-  // --- State: Track menu placement per day/meal ---
-  // Structure: { [dayIndex]: { [mealMoment]: Menu[] } }
-  // Build board from menus with assignedDay/assignedMoment
-  const [board, setBoard] = React.useState(() => {
+  // --- Memoized board: always reflects latest menus ---
+  const board = React.useMemo(() => {
     const initial: Record<string, Record<string, Menu[]>> = {};
     weekDays.forEach((day) => {
       initial[day] = {};
@@ -115,7 +113,7 @@ const WeeklyMealKanban: React.FC<WeeklyMealKanbanProps> = ({ menus, weekStart, o
       }
     });
     return initial;
-  });
+  }, [menus]);
 
   // --- Drag/Drop Handlers ---
   function handleDragEnd(event: DragEndEvent) {
@@ -130,13 +128,6 @@ const WeeklyMealKanban: React.FC<WeeklyMealKanbanProps> = ({ menus, weekStart, o
       if (!menu) return;
       const newMenus = menus.map(m => m.id === menuId ? { ...m, assignedDay: undefined, assignedMoment: undefined } : m);
       onMenusChange(newMenus);
-      setBoard(prev => {
-        const newBoard = JSON.parse(JSON.stringify(prev));
-        if (menu.assignedDay && menu.assignedMoment) {
-          newBoard[menu.assignedDay][menu.assignedMoment] = newBoard[menu.assignedDay][menu.assignedMoment].filter(m => m.id !== menuId);
-        }
-        return newBoard;
-      });
       return;
     }
     const [toDay, toMoment] = over.id.toString().split("|");
@@ -188,7 +179,7 @@ const WeeklyMealKanban: React.FC<WeeklyMealKanbanProps> = ({ menus, weekStart, o
                           newBoard[fromDay][fromMoment] = newBoard[fromDay][fromMoment].filter(m => m.id !== menuId);
                           // Add to new slot
                           newBoard[day][moment].push(menu);
-                          setBoard(newBoard);
+                          
                           // Flatten board to menus array for parent
                           const newMenus = Object.values(newBoard).flatMap(dayObj => Object.values(dayObj).flat());
                           onMenusChange(newMenus);
