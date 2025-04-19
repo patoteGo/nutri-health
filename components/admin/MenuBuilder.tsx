@@ -3,6 +3,8 @@ import React, { useState, useEffect } from "react";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Select, SelectItem, SelectContent, SelectTrigger, SelectValue } from "../../components/ui/select";
+import { Tooltip, TooltipTrigger, TooltipContent } from "../../components/ui/tooltip";
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../../components/ui/dialog";
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { z } from "zod";
 
@@ -230,15 +232,21 @@ export default function MenuBuilder({
               : t('amount', 'Amount')
             }
           />
-          <Button
-            type="button"
-            onClick={addIngredient}
-            variant="secondary"
-            disabled={!selectedIngredient || ingredientWeight <= 0 || isDuplicate}
-            title={isDuplicate ? t('ingredient_already_in_list', 'This ingredient is already in the list') : ''}
-          >
-            {t('add_ingredient', 'Add Ingredient')}
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="button"
+                onClick={addIngredient}
+                variant="outline"
+                disabled={!selectedIngredient || ingredientWeight <= 0 || isDuplicate}
+                title={isDuplicate ? t('ingredient_already_in_list', 'This ingredient is already in the list') : ''}
+                aria-label="Add Ingredient"
+              >
+                +
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Add Ingredient / Adicionar ingrediente</TooltipContent>
+          </Tooltip>
         </div>
         {isDuplicate && (
           <div className="text-destructive text-sm mt-1 flex items-center gap-1" role="alert">
@@ -249,6 +257,24 @@ export default function MenuBuilder({
         <ul className="list-disc ml-6 mt-2 text-sm">
           {ingredients.map((ing, idx) => (
             <li key={idx} className="flex items-center gap-3 py-2">
+              <button
+                type="button"
+                aria-label="Delete ingredient"
+                title="Delete ingredient"
+                className="mr-2 p-1 rounded hover:bg-destructive/10 transition-colors"
+                onClick={() => {
+                  setIngredients(ingredients => ingredients.filter((_, i) => i !== idx));
+                }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-destructive"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></svg>
+              </button>
+              <img
+                src={ing.imageUrl || '/placeholder-ingredient.png'}
+                alt={ing.name}
+                className="w-10 h-10 object-cover rounded-md border"
+                style={{ minWidth: 40, minHeight: 40 }}
+                onError={e => (e.currentTarget.src = '/placeholder-ingredient.png')}
+              />
               <div className="flex-1 flex flex-col">
                 <span>{t(`ingredient_${ing.name.toLowerCase().replace(/\s+/g, '_')}`, ing.name)} — {ing.weight}{
                   ing.unit === 'GRAM' ? 'g'
@@ -265,13 +291,6 @@ export default function MenuBuilder({
                   })}
                 </span>
               </div>
-              <img
-                src={ing.imageUrl || '/placeholder-ingredient.png'}
-                alt={ing.name}
-                className="w-10 h-10 object-cover rounded-md border"
-                style={{ minWidth: 40, minHeight: 40 }}
-                onError={e => (e.currentTarget.src = '/placeholder-ingredient.png')}
-              />
             </li>
           ))}
         </ul>
@@ -287,9 +306,38 @@ export default function MenuBuilder({
             <li key={menu.id} className="border rounded p-2 bg-white flex flex-col gap-1">
               <div className="flex justify-between items-center">
                 <span className="font-semibold">{menu.name}</span>
-                <Button size="sm" variant="destructive" onClick={() => removeMenu(menu.id)}>
-                  {t('remove', 'Remove')}
-                </Button>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button size="icon" variant="ghost" aria-label="Delete menu" title="Delete menu">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-destructive"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></svg>
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Delete Menu</DialogTitle>
+                      <DialogDescription>
+                        Are you sure you want to delete this menu? This action cannot be undone.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={e => {
+                        // Close dialog via ref, handled by DialogClose button
+                        const dialog = e.currentTarget.closest('[data-slot="dialog-content"]');
+                        if (dialog) {
+                          (dialog.querySelector('[data-slot="dialog-close"]') as HTMLElement)?.click();
+                        }
+                      }}>Cancel</Button>
+                      <Button variant="destructive" onClick={e => {
+                        removeMenu(menu.id);
+                        // Close dialog via ref
+                        const dialog = e.currentTarget.closest('[data-slot="dialog-content"]');
+                        if (dialog) {
+                          (dialog.querySelector('[data-slot="dialog-close"]') as HTMLElement)?.click();
+                        }
+                      }}>Delete</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
               <div className="text-xs text-muted-foreground">{menu.category}</div>
               <ul className="text-xs ml-4">
