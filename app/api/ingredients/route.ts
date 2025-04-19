@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import type { Ingredient } from "@prisma/client";
 
 // GET /api/ingredients?search=term
 export async function GET(req: NextRequest) {
@@ -13,12 +14,12 @@ export async function GET(req: NextRequest) {
   let filtered = ingredients;
   if (search) {
     const lower = search.toLowerCase();
-    filtered = ingredients.filter(ing =>
+    filtered = ingredients.filter((ing: Ingredient) =>
       ing.name.toLowerCase().includes(lower) ||
-      (ing.searchTerms || []).some(term => term.toLowerCase().includes(lower))
+      (ing.searchTerms || []).some((term: string) => term.toLowerCase().includes(lower))
     );
   }
   return NextResponse.json(
-    filtered.slice(0, 20).map(({ id, name, carbs, protein, fat, imageUrl, unit }) => ({ id, name, carbs, protein, fat, imageUrl, unit }))
+    filtered.slice(0, 20).map(({ id, name, carbs, protein, fat, imageUrl, unit }: Ingredient) => ({ id, name, carbs, protein, fat, imageUrl, unit }))
   );
 }
