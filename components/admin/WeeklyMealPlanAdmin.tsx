@@ -109,7 +109,7 @@ export default function WeeklyMealPlanAdmin({ userEmail }: WeeklyMealPlanAdminPr
         </div>
       )}
       {/* Menu Builder */}
-      <MenuBuilder menus={menus} onMenusChange={setMenus} />
+      <MenuBuilder menus={menus} onMenusChange={setMenus} personId={selectedPerson} />
       {/* TODO: Add drag-and-drop assignment of menus to week days here */}
       {editPlan && (
         <table className="w-full border mb-4">
