@@ -153,11 +153,38 @@ export default function MenuBuilder({
           </div>
           <Input
             type="number"
-            placeholder="Weight (g)"
+            placeholder={
+              selectedIngredient?.unit === 'GRAM' ? 'Weight (g)'
+              : selectedIngredient?.unit === 'ML' ? 'Volume (ml)'
+              : selectedIngredient?.unit ? 'Quantity'
+              : 'Amount'
+            }
             value={ingredientWeight || ""}
-            onChange={e => setIngredientWeight(Number(e.target.value))}
+            onChange={e => setIngredientWeight(
+              selectedIngredient && [
+                'UNIT', 'SLICE', 'TEASPOON', 'TABLESPOON', 'PIECE', 'CUP'
+              ].includes(selectedIngredient.unit || '')
+                ? Math.max(1, Math.floor(Number(e.target.value)))
+                : Number(e.target.value)
+            )}
             className="w-28"
-            min={0}
+            min={1}
+            step={
+              selectedIngredient && [
+                'UNIT', 'SLICE', 'TEASPOON', 'TABLESPOON', 'PIECE', 'CUP'
+              ].includes(selectedIngredient.unit || '') ? 1 : 0.1
+            }
+            inputMode={
+              selectedIngredient && [
+                'UNIT', 'SLICE', 'TEASPOON', 'TABLESPOON', 'PIECE', 'CUP'
+              ].includes(selectedIngredient.unit || '') ? 'numeric' : 'decimal'
+            }
+            aria-label={
+              selectedIngredient?.unit === 'GRAM' ? 'Weight in grams'
+              : selectedIngredient?.unit === 'ML' ? 'Volume in milliliters'
+              : selectedIngredient?.unit ? `Quantity (${selectedIngredient.unit.toLowerCase()})`
+              : 'Amount'
+            }
           />
           <Button type="button" onClick={addIngredient} variant="secondary" disabled={!selectedIngredient || ingredientWeight <= 0}>
             Add Ingredient
