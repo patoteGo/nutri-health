@@ -113,7 +113,7 @@ export default function MenuBuilder({
     },
     onError: (error: unknown) => {
       // Type guard for error
-      const message = typeof error === 'object' && error !== null && 'message' in error ? (error as any).message : String(error);
+      const message = typeof error === 'object' && error !== null && 'message' in error ? (error as { message?: string }).message : String(error);
       toast.error(message || t('menu_delete_failed', 'Failed to delete menu'));
     },
   });
@@ -139,7 +139,7 @@ export default function MenuBuilder({
     },
     onError: (error: unknown) => {
       // Type guard for error
-      const message = typeof error === 'object' && error !== null && 'message' in error ? (error as any).message : String(error);
+      const message = typeof error === 'object' && error !== null && 'message' in error ? (error as { message?: string }).message : String(error);
       toast.error(message || t('menu_save_failed', 'Failed to save menu'));
     },
   });

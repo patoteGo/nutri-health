@@ -1,5 +1,5 @@
 // API route for fetching all people (users) for admin dashboard
-import { NextRequest } from "next/server";
+// import { NextRequest } from "next/server"; // Removed unused import
 import { prisma } from "../../../../lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/route";

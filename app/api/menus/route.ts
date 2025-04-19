@@ -70,13 +70,15 @@ export async function DELETE(req: NextRequest) {
         return NextResponse.json({ error: `Menu with id ${id} not found` }, { status: 404 });
       }
       return NextResponse.json({ success: true, deleted });
-    } catch (err: any) {
-      if (err.code === 'P2025') {
+    } catch (err: unknown) {
+      if (typeof err === 'object' && err !== null && 'code' in err && (err as { code?: string }).code === 'P2025') {
         return NextResponse.json({ error: `Menu with id ${id} not found (prisma)` }, { status: 404 });
       }
-      return NextResponse.json({ error: `DB error: ${err.message}` }, { status: 500 });
+      const message = typeof err === 'object' && err !== null && 'message' in err ? (err as { message?: string }).message : String(err);
+      return NextResponse.json({ error: `DB error: ${message}` }, { status: 500 });
     }
-  } catch (e: any) {
-    return NextResponse.json({ error: `Failed to delete menu: ${e.message}` }, { status: 500 });
+  } catch (e: unknown) {
+    const message = typeof e === 'object' && e !== null && 'message' in e ? (e as { message?: string }).message : String(e);
+    return NextResponse.json({ error: `Failed to delete menu: ${message}` }, { status: 500 });
   }
 }
