@@ -1,4 +1,5 @@
 "use client";
+import type { Menu } from "@/lib/types";
 // Admin dashboard UI for editing weekly meal plans
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -7,14 +8,12 @@ import MenuBuilder from "./MenuBuilder";
 import { DndContext, DragEndEvent } from "@dnd-kit/core";
 import { Select, SelectItem, SelectContent, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { getWeekStart } from "../../lib/weekUtils";
-import { useSession } from "next-auth/react";
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import WeeklyMealKanban from "./WeeklyMealKanban";
 
 // Types
-interface WeeklyMealPlanAdminProps {
-  // userEmail: string; // removed unused prop
-}
+
 
 export default function WeeklyMealPlanAdmin({}: WeeklyMealPlanAdminProps) {
   // ...existing code
@@ -27,6 +26,11 @@ interface Menu {
   [key: string]: unknown;
 }
 const [menus, setMenus] = useState<Menu[]>([]);
+
+type MenuPlan = {
+  menus: Menu[];
+  [key: string]: unknown;
+};
 
   // Drag-and-drop handler for both MenuBuilder and Kanban
   function handleDragEnd(event: DragEndEvent) {
@@ -82,8 +86,8 @@ const [editPlan, setEditPlan] = useState<unknown>(null);
   useEffect(() => {
     setEditPlan(plan);
     // Use type guard for plan
-    if (plan && typeof plan === "object" && plan !== null && 'menus' in plan && Array.isArray((plan as any).menus)) {
-      setMenus((plan as any).menus);
+    if (plan && typeof plan === "object" && plan !== null && 'menus' in plan && Array.isArray((plan as MenuPlan).menus)) {
+      setMenus((plan as MenuPlan).menus);
     }
   }, [plan]);
 
@@ -163,7 +167,7 @@ mutationFn: async (newPlan: unknown) => {
           person: selectedPerson,
           weekStart: weekStart.toISOString(),
           // Type guard for editPlan
-          meals: (editPlan && typeof editPlan === "object" && editPlan !== null && 'meals' in editPlan) ? (editPlan as any).meals : undefined,
+          meals: (editPlan && typeof editPlan === "object" && editPlan !== null && 'meals' in editPlan) ? (editPlan as { meals: unknown }).meals : undefined,
         })}
         disabled={!selectedPerson || !editPlan || mutation.isLoading}
       >
