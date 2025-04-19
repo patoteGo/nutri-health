@@ -19,6 +19,25 @@ export const authOptions: NextAuthOptions = {
   ],
   // Ensure profile image is always present in session
   callbacks: {
+    async signIn({ user, profile }) {
+      // Upsert user in DB with name and Google picture on every login
+      const { prisma } = await import('./prisma');
+      if (user.email) {
+        await prisma.user.upsert({
+          where: { email: user.email },
+          update: {
+            name: user.name ?? profile?.name ?? undefined,
+            picture: user.image ?? profile?.picture ?? undefined,
+          },
+          create: {
+            email: user.email,
+            name: user.name ?? profile?.name ?? undefined,
+            picture: user.image ?? profile?.picture ?? undefined,
+          },
+        });
+      }
+      return true;
+    },
     async session({ session, token }) {
       if (session?.user && token?.picture) {
         session.user.image = token.picture as string;
