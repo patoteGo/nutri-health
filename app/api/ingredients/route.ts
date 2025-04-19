@@ -14,6 +14,6 @@ export async function GET(req: NextRequest) {
     take: 20,
   });
   return NextResponse.json(
-    ingredients.map(({ id, name, carbs, protein, fat }) => ({ id, name, carbs, protein, fat }))
+    ingredients.map(({ id, name, carbs, protein, fat, imageUrl, unit }) => ({ id, name, carbs, protein, fat, imageUrl, unit }))
   );
 }

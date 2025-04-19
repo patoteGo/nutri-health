@@ -12,8 +12,10 @@ const IngredientSchema = z.object({
   carbs: z.number(),
   protein: z.number(),
   fat: z.number(),
+  imageUrl: z.string().optional().nullable(),
+  unit: z.string().optional().nullable(),
 });
-type Ingredient = z.infer<typeof IngredientSchema> & { weight: number };
+type Ingredient = z.infer<typeof IngredientSchema> & { weight: number }; // includes imageUrl
 
 
 interface Menu {
@@ -163,11 +165,25 @@ export default function MenuBuilder({
         </div>
         <ul className="list-disc ml-6 mt-2 text-sm">
           {ingredients.map((ing, idx) => (
-            <li key={idx} className="flex flex-col">
-              <span>{ing.name} — {ing.weight}g</span>
-              <span className="text-xs text-muted-foreground">
-                {ing.carbs}g carbs, {ing.protein}g protein, {ing.fat}g fat / 100g
-              </span>
+            <li key={idx} className="flex items-center gap-3 py-2">
+              <div className="flex-1 flex flex-col">
+                <span>{ing.name} — {ing.weight}{
+                  ing.unit === 'GRAM' ? 'g'
+                  : ing.unit === 'ML' ? 'ml'
+                  : ing.unit ? ` (${ing.unit.toLowerCase()})`
+                  : ''
+                }</span>
+                <span className="text-xs text-muted-foreground">
+                  {ing.carbs}g carbs, {ing.protein}g protein, {ing.fat}g fat / {ing.unit === 'GRAM' ? '100g' : ing.unit === 'ML' ? '100ml' : 'unit'}
+                </span>
+              </div>
+              <img
+                src={ing.imageUrl || '/placeholder-ingredient.png'}
+                alt={ing.name}
+                className="w-10 h-10 object-cover rounded-md border"
+                style={{ minWidth: 40, minHeight: 40 }}
+                onError={e => (e.currentTarget.src = '/placeholder-ingredient.png')}
+              />
             </li>
           ))}
         </ul>
