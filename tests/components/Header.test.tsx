@@ -1,9 +1,8 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import Header from "@/components/Header";
-import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
-import { vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 vi.mock("next/navigation", () => ({
   usePathname: vi.fn(),

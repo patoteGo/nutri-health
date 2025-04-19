@@ -22,8 +22,7 @@ export const CardTitle = React.forwardRef<HTMLHeadingElement, React.HTMLAttribut
 );
 CardTitle.displayName = "CardTitle";
 
-export interface CardContentProps extends React.HTMLAttributes<HTMLDivElement> {}
-export const CardContent = React.forwardRef<HTMLDivElement, CardContentProps>(
+export const CardContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
     <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
   )
