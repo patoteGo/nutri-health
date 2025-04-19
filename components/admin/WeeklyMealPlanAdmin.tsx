@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { Button } from "../../components/ui/button";
 import MenuBuilder from "./MenuBuilder";
+import { DndContext, DragEndEvent } from "@dnd-kit/core";
 import { Select, SelectItem, SelectContent, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { getWeekStart, getWeekDays, mealMoments } from "../../lib/weekUtils";
 import { WeeklyMealPlanSchema, MealMoment } from "../../lib/types";
@@ -18,6 +19,29 @@ interface WeeklyMealPlanAdminProps {
 }
 
 export default function WeeklyMealPlanAdmin({ userEmail }: WeeklyMealPlanAdminProps) {
+  // ...existing code
+  const [menus, setMenus] = useState<any[]>([]);
+
+  // Drag-and-drop handler for both MenuBuilder and Kanban
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!active || !over) return;
+    const [menuId, fromDay, fromMoment] = active.id.toString().split("|");
+    // If dropped over Menus list (unassigned), over.id === 'unassigned'
+    if (over.id === 'unassigned') {
+      const menu = menus.find(m => m.id === menuId);
+      if (!menu) return;
+      const newMenus = menus.map(m => m.id === menuId ? { ...m, assignedDay: undefined, assignedMoment: undefined } : m);
+      setMenus(newMenus);
+      return;
+    }
+    const [toDay, toMoment] = over.id.toString().split("|");
+    const menu = menus.find(m => m.id === menuId);
+    if (!menu || menu.category?.toUpperCase() !== toMoment) return;
+    if (menu.assignedDay === toDay && menu.assignedMoment === toMoment) return;
+    const newMenus = menus.map(m => m.id === menuId ? { ...m, assignedDay: toDay, assignedMoment: toMoment } : m);
+    setMenus(newMenus);
+  }
   const { t } = useTranslation();
   const { data: session } = useSession();
   const [selectedPerson, setSelectedPerson] = useState<string>("");
@@ -50,6 +74,9 @@ export default function WeeklyMealPlanAdmin({ userEmail }: WeeklyMealPlanAdminPr
 
   useEffect(() => {
     setEditPlan(plan);
+    if (plan && plan.menus) {
+      setMenus(plan.menus);
+    }
   }, [plan]);
 
   // Save mutation
@@ -68,8 +95,6 @@ export default function WeeklyMealPlanAdmin({ userEmail }: WeeklyMealPlanAdminPr
     },
   });
 
-  // Menu builder state
-  const [menus, setMenus] = useState<any[]>([]); // TODO: Use Menu type
 
   // UI rendering
   return (
@@ -112,17 +137,18 @@ export default function WeeklyMealPlanAdmin({ userEmail }: WeeklyMealPlanAdminPr
         </div>
       )}
       {/* Menu Builder */}
-      <section className="mb-6">
-        <MenuBuilder menus={menus} onMenusChange={setMenus} personId={selectedPerson} />
-      </section>
-      {/* TODO: Add drag-and-drop assignment of menus to week days here */}
-      {editPlan && (
-        <WeeklyMealKanban
-          menus={menus}
-          weekStart={weekStart}
-          onMenusChange={setMenus}
-        />
-      )}
+      <DndContext onDragEnd={handleDragEnd}>
+        <section className="mb-6">
+          <MenuBuilder menus={menus} onMenusChange={setMenus} personId={selectedPerson} />
+        </section>
+        {editPlan && (
+          <WeeklyMealKanban
+            menus={menus}
+            weekStart={weekStart}
+            onMenusChange={setMenus}
+          />
+        )}
+      </DndContext>
       <Button
         onClick={() => mutation.mutate({
           person: selectedPerson,
