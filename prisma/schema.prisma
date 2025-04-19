@@ -69,6 +69,7 @@ model Ingredient {
   fat     Float          // grams per 100g or per unit
   unit    IngredientUnit @default(GRAM) // how this ingredient is measured (GRAM, UNIT, ML, etc)
   imageUrl String?       // URL to an image of the ingredient
+  searchTerms String[]   @default([]) // Array of search terms in multiple languages
   // Optionally: fiber, calories, etc.
   // If needed, add a conversionFactor field for custom conversions.
 }

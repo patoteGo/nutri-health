@@ -5,15 +5,20 @@ import { prisma } from "@/lib/prisma";
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const search = searchParams.get("search")?.trim() || "";
-  const where = search
-    ? { name: { contains: search, mode: "insensitive" } }
-    : {};
+  // Fetch a reasonable number of ingredients for client-side filtering
   const ingredients = await prisma.ingredient.findMany({
-    where,
     orderBy: { name: "asc" },
-    take: 20,
+    take: 100
   });
+  let filtered = ingredients;
+  if (search) {
+    const lower = search.toLowerCase();
+    filtered = ingredients.filter(ing =>
+      ing.name.toLowerCase().includes(lower) ||
+      (ing.searchTerms || []).some(term => term.toLowerCase().includes(lower))
+    );
+  }
   return NextResponse.json(
-    ingredients.map(({ id, name, carbs, protein, fat, imageUrl, unit }) => ({ id, name, carbs, protein, fat, imageUrl, unit }))
+    filtered.slice(0, 20).map(({ id, name, carbs, protein, fat, imageUrl, unit }) => ({ id, name, carbs, protein, fat, imageUrl, unit }))
   );
 }
