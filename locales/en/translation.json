@@ -98,6 +98,17 @@
   "ingredient_broccoli": "Broccoli",
   "ingredient_olive_oil": "Olive Oil",
   "ingredient_potato": "Potato",
-  "ingredient_salmon": "Salmon"
-
+  "ingredient_salmon": "Salmon",
+  "category": "Category",
+  "category_breakfast": "Breakfast",
+  "category_lunch": "Lunch",
+  "category_dinner": "Dinner",
+  "category_snack": "Snack",
+  "ingredients": "Ingredients",
+  "search_ingredients": "Search ingredients",
+  "unassigned_menus": "Unassigned Menus",
+  "no_unassigned_menus": "No unassigned menus",
+  "new_menu": "New Menu",
+  "name": "Name",
+  "menu_name_placeholder": "Enter menu name"
 }

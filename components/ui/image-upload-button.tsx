@@ -1,6 +1,7 @@
 import React, { useRef } from "react";
 import { Button } from "./button";
 import { Upload } from "lucide-react";
+import { Image } from "next/image";
 
 interface ImageUploadButtonProps {
   onChange: (file: File) => void;
