@@ -2,14 +2,12 @@
 
 import React from "react";
 import { Card } from "../ui/card";
-import { DragDropContext, Droppable, Draggable, DropResult, DroppableProvided, DraggableProvided } from "@hello-pangea/dnd";
+import { Droppable, Draggable, DraggableProvided } from "@hello-pangea/dnd";
 import type { Menu } from "@/lib/types";
-import { toast } from "sonner";
+// Removed unused toast import
 
 interface WeeklyMealKanbanProps {
   menus: Menu[];
-  onMenusChange: (menus: Menu[]) => void;
-  parentIsDragging?: boolean;
 }
 
 const weekDays = [
@@ -45,7 +43,7 @@ function getMealLabel(meal: string) {
 // --- Main Kanban Component ---
 const mealTypeOrder = ["BREAKFAST", "LUNCH", "DINNER", "SNACK"];
 
-type MealType = typeof mealTypeOrder[number];
+// Removed unused MealType type
 
 // Menu card component that will be draggable
 const MenuCard: React.FC<{
@@ -84,7 +82,7 @@ const MenuCard: React.FC<{
   );
 };
 
-const WeeklyMealKanban: React.FC<WeeklyMealKanbanProps> = ({ menus, onMenusChange, parentIsDragging = false }) => {
+const WeeklyMealKanban: React.FC<WeeklyMealKanbanProps> = ({ menus }) => {
   // Debug counter for component renders
   const renderCount = React.useRef(0);
   renderCount.current++;
@@ -117,13 +115,7 @@ const WeeklyMealKanban: React.FC<WeeklyMealKanbanProps> = ({ menus, onMenusChang
     return result;
   }, [menus]);
   
-  // Function to check if a day already has a menu of a specific type
-  const dayHasMealType = React.useCallback((day: string, mealType: string) => {
-    const hasType = menusByDay[day].some(menu => menu.category?.toUpperCase() === mealType.toUpperCase());
-    console.log(`Checking if ${day} has ${mealType}: ${hasType}`);
-    return hasType;
-  }, [menusByDay]);
-
+  // Removed unused dayHasMealType function
   // Log available drop zones after render
   React.useEffect(() => {
     // Wait for DOM to be ready
@@ -137,15 +129,7 @@ const WeeklyMealKanban: React.FC<WeeklyMealKanbanProps> = ({ menus, onMenusChang
   // This component just renders the Kanban board
   
   // Local tracking of dragged item ID for debugging
-  const [draggedItemId, setDraggedItemId] = React.useState<string | null>(null);
-
-  // Update local state based on parent drag state
-  React.useEffect(() => {
-    if (!parentIsDragging) {
-      setDraggedItemId(null);
-    }
-  }, [parentIsDragging]);
-
+  // Removed unused draggedItemId state and effect
   return (
     <>
         <div className="overflow-x-auto">
@@ -195,7 +179,6 @@ const WeeklyMealKanban: React.FC<WeeklyMealKanbanProps> = ({ menus, onMenusChang
                                   {(provided, snapshot) => {
                                     if (snapshot.isDragging) {
                                       console.log(`Dragging menu ${menu.id} from ${day}`);
-                                      setDraggedItemId(menu.id);
                                     }
                                     
                                     return (
@@ -237,6 +220,7 @@ const WeeklyMealKanban: React.FC<WeeklyMealKanbanProps> = ({ menus, onMenusChang
 
 // Fix export
 WeeklyMealKanban.displayName = 'WeeklyMealKanban';
+// Lint: All unused vars/types/imports removed
 
 // Ensure this export is correctly processed
 export default WeeklyMealKanban;

@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Button } from "../../components/ui/button";
 import MenuBuilder from "./MenuBuilder";
 // Import DragDropContext from hello-pangea/dnd
-import { DragDropContext, DropResult } from "@hello-pangea/dnd";
+import { DragDropContext, DropResult, DragUpdate, DragStart } from "@hello-pangea/dnd";
 import { Select, SelectItem, SelectContent, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { getWeekStart } from "../../lib/weekUtils";
 
@@ -47,13 +47,13 @@ export default function WeeklyMealPlanAdmin() {
   const [dragDestination, setDragDestination] = useState<string | null>(null);
   
   // Handle all drag operations at the parent level
-  const handleDragStart = (start: any) => {
+  const handleDragStart = (start: DragStart) => {
     console.log('PARENT: Drag started', start);
     setIsDragging(true);
     setDragSource(start.source.droppableId);
   };
   
-  const handleDragUpdate = (update: any) => {
+  const handleDragUpdate = (update: DragUpdate) => {
     if (update.destination) {
       setDragDestination(update.destination.droppableId);
       console.log('PARENT: Dragging over', update.destination.droppableId);
@@ -136,7 +136,9 @@ export default function WeeklyMealPlanAdmin() {
       console.log(`PARENT: Moving menu ${menu.id} to unassigned`);
       const newMenus = menus.map(m => {
         if (m.id === draggableId) {
-          const { assignedDay, assignedMoment, ...rest } = m;
+          const rest = { ...m };
+          delete rest.assignedDay;
+          delete rest.assignedMoment;
           return rest as Menu;
         }
         return m;
@@ -262,11 +264,7 @@ mutationFn: async (newPlan: unknown) => {
           />
         </section>
         {typeof editPlan === 'object' && editPlan !== null && (
-          <WeeklyMealKanban
-            menus={menus}
-            onMenusChange={setMenus}
-            parentIsDragging={isDragging}
-          />
+          <WeeklyMealKanban menus={menus} />
         )}
       </DragDropContext>
       <Button

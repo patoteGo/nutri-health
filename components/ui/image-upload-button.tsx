@@ -47,10 +47,12 @@ export function ImageUploadButton({ onChange, "aria-label": ariaLabel, imageUrl,
         {buttonLabel && <span className="sr-only">{buttonLabel}</span>}
       </Button>
       {imageUrl && (
-        <img
+        <Image
           src={imageUrl}
           alt={ariaLabel || buttonLabel || "Preview"}
           className="mt-1 w-12 h-12 object-cover rounded"
+          width={48}
+          height={48}
         />
       )}
     </div>
