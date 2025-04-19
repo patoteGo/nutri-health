@@ -80,6 +80,14 @@
   "ingredient_brown_rice": "Arroz Integral",
   "ingredient_quinoa": "Quinoa",
   "ingredient_almond": "Amêndoa",
-  "ingredient_nutrition_info": "{{carbs}}g carboidratos, {{protein}}g proteína, {{fat}}g gordura / {{unit}}"
+  "ingredient_nutrition_info": "{{carbs}}g carboidratos, {{protein}}g proteína, {{fat}}g gordura / {{unit}}",
+  "breakfast": "Café da manhã",
+  "lunch": "Almoço",
+  "dinner": "Jantar",
+  "snack": "Lanche",
+  "ingredient_broccoli": "Brócolis",
+  "ingredient_olive_oil": "Azeite de oliva",
+  "ingredient_potato": "Batata",
+  "ingredient_salmon": "Salmão"
 
 }

@@ -80,6 +80,14 @@
   "ingredient_brown_rice": "Brown Rice",
   "ingredient_quinoa": "Quinoa",
   "ingredient_almond": "Almond",
-  "ingredient_nutrition_info": "{{carbs}}g carbs, {{protein}}g protein, {{fat}}g fat / {{unit}}"
+  "ingredient_nutrition_info": "{{carbs}}g carbs, {{protein}}g protein, {{fat}}g fat / {{unit}}",
+  "breakfast": "Breakfast",
+  "lunch": "Lunch",
+  "dinner": "Dinner",
+  "snack": "Snack",
+  "ingredient_broccoli": "Broccoli",
+  "ingredient_olive_oil": "Olive Oil",
+  "ingredient_potato": "Potato",
+  "ingredient_salmon": "Salmon"
 
 }
