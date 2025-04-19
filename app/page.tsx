@@ -7,8 +7,11 @@ import Link from "next/link";
 import { useTranslation } from "react-i18next";
 // LanguageProvider and LanguageSwitcher are now provided globally in layout.tsx
 
+import { useSession } from "next-auth/react";
+
 export default function Home() {
   const { t } = useTranslation(); // Reason: Enables translations for all UI strings
+  const { data: session } = useSession();
   return (
     <div className="min-h-screen bg-background flex flex-col items-center px-2 py-4 sm:px-4">
       {/* LanguageSwitcher is now in Header (global) */}
@@ -58,17 +61,22 @@ export default function Home() {
             </Button>
           </CardContent>
         </Card>
-        {/* Admin Panel Placeholder */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("admin_panel", "Admin Panel")}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Button asChild variant="destructive" className="w-full" disabled>
-              <span>{t("admin_coming", "Admin Access (Coming Soon)")}</span>
-            </Button>
-          </CardContent>
-        </Card>
+        {/* Admin Panel Access */}
+        {session && (
+          <Card>
+            <CardHeader>
+              <CardTitle>{t("admin_dashboard", "Admin Dashboard")}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Button asChild variant="destructive" className="w-full">
+                <Link href="/admin/meals">{t("admin_meal_dashboard_btn", "Go to Admin Meal Dashboard")}</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+        <div className="w-full text-center text-muted-foreground text-sm py-6">
+          {t("coming_soon", "Coming soon")}
+        </div>
       </main>
               <footer className="mt-10 text-xs text-muted-foreground text-center">
           Nutri-Health &copy; {new Date().getFullYear()} &mdash; {t("powered_by", "Powered by Next.js, V0, ShadCN UI")}
