@@ -1,6 +1,16 @@
 // Types and zod schemas for weekly meal plan
 import { z } from "zod";
 
+// Shared Menu type for admin/meal plan components
+export interface Menu {
+  id: string;
+  category?: string;
+  assignedDay?: string;
+  assignedMoment?: string;
+  [key: string]: unknown;
+}
+
+
 export const MealMoment = z.enum([
   "BREAKFAST",
   "SNACK1",

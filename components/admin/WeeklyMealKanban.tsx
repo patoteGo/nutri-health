@@ -10,9 +10,11 @@ import DraggableMenuCard from "./DraggableMenuCard";
 // --- Zod Menu Schema ---
 
 // --- Props ---
+import type { Menu } from "@/lib/types";
+
 interface WeeklyMealKanbanProps {
-  menus: any[];
-  onMenusChange: (menus: any[]) => void;
+  menus: Menu[];
+  onMenusChange: (menus: Menu[]) => void;
 }
 
 const weekDays = [
@@ -49,7 +51,7 @@ function getMealLabel(meal: string) {
 interface DroppableMealSlotProps {
   day: string;
   mealMoment: string;
-  menus: any[];
+  menus: Menu[];
 }
 
 const DroppableMealSlot: React.FC<DroppableMealSlotProps> = React.memo(({ day, mealMoment, menus }) => {
@@ -97,37 +99,7 @@ const WeeklyMealKanban: React.FC<WeeklyMealKanbanProps> = ({ menus, onMenusChang
   }, [menus]);
 
   // --- Drag/Drop Handlers ---
-  function handleDragEnd(event: DragEndEvent) {
-    const { active, over } = event;
-    if (!active || !over) return;
-    // Parse IDs
-    const [menuId, fromDay, fromMoment] = active.id.toString().split("|");
-    // If dropped over Menus list (unassigned), over.id === 'unassigned'
-    if (over.id === 'unassigned') {
-      // Remove assignment
-      const menu = menus.find(m => m.id === menuId);
-      if (!menu) return;
-      const newMenus = menus.map(m => m.id === menuId ? { ...m, assignedDay: undefined, assignedMoment: undefined } : m);
-      onMenusChange(newMenus);
-      return;
-    }
-    const [toDay, toMoment] = over.id.toString().split("|");
-    // Only allow drop if mealMoment matches menu's category
-    const menu = menus.find(m => m.id === menuId);
-    if (!menu || menu.category.toUpperCase() !== toMoment) return;
-    if (menu.assignedDay === toDay && menu.assignedMoment === toMoment) return;
-    // Update assignment
-    const newMenus = menus.map(m => m.id === menuId ? { ...m, assignedDay: toDay, assignedMoment: toMoment } : m);
-    onMenusChange(newMenus);
-    setBoard(prev => {
-      const newBoard = JSON.parse(JSON.stringify(prev));
-      if (menu.assignedDay && menu.assignedMoment) {
-        newBoard[menu.assignedDay][menu.assignedMoment] = newBoard[menu.assignedDay][menu.assignedMoment].filter(m => m.id !== menuId);
-      }
-      newBoard[toDay][toMoment].push({ ...menu, assignedDay: toDay, assignedMoment: toMoment });
-      return newBoard;
-    });
-  }
+  
 
   return (
     <div className="overflow-x-auto">

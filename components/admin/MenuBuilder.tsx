@@ -390,7 +390,6 @@ export default function MenuBuilder({
               ))}
             </ul>
           );
-        })()}
       </div>
 
     </div>
