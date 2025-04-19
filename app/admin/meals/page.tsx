@@ -1,7 +1,7 @@
 // Admin dashboard for managing weekly meals
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
-import { authOptions } from "../../api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/authOptions";
 import WeeklyMealPlanAdmin from "../../../components/admin/WeeklyMealPlanAdmin";
 
 export default async function AdminMealsPage() {
