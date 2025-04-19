@@ -21,7 +21,7 @@ const handler = NextAuth({
   // Ensure profile image is always present in session
   callbacks: {
     async session({ session, token }) {
-      if (token?.picture) {
+      if (session?.user && token?.picture) {
         session.user.image = token.picture as string;
       }
       return session;
