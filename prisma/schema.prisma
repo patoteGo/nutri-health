@@ -50,11 +50,26 @@ model WeeklyMealPlan {
 
 // MealData: { parts: [{ name, grams, imageUrl }] }
 
-model Ingredient {
-  id      String  @id @default(uuid())
-  name    String  @unique
-  carbs   Float   // grams per 100g
-  protein Float   // grams per 100g
-  fat     Float   // grams per 100g
-  // Optionally: fiber, calories, etc.
+enum IngredientUnit {
+  GRAM
+  UNIT
+  ML
+  TEASPOON
+  TABLESPOON
+  SLICE
+  CUP
+  PIECE
 }
+
+model Ingredient {
+  id      String         @id @default(uuid())
+  name    String         @unique
+  carbs   Float          // grams per 100g or per unit
+  protein Float          // grams per 100g or per unit
+  fat     Float          // grams per 100g or per unit
+  unit    IngredientUnit @default(GRAM) // how this ingredient is measured (GRAM, UNIT, ML, etc)
+  imageUrl String?       // URL to an image of the ingredient
+  // Optionally: fiber, calories, etc.
+  // If needed, add a conversionFactor field for custom conversions.
+}
+
