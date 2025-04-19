@@ -15,9 +15,23 @@ model User {
   id        String   @id @default(uuid())
   email     String   @unique
   name      String?
+  picture   String?  // URL to Google profile picture
   isAdmin   Boolean  @default(false)
   meals     Meal[]
   weeklyPlans WeeklyMealPlan[]
+  healthInfo UserHealthInfo?
+}
+
+model UserHealthInfo {
+  id        String  @id @default(uuid())
+  user      User    @relation(fields: [userId], references: [id])
+  userId    String  @unique
+  fat       Float?
+  muscle    Float?
+  weight    Float?
+  height    Float?
+  basal     Float? // Basal metabolic rate
+  // Add other basic health info fields here as needed
 }
 
 model Ingredient {
