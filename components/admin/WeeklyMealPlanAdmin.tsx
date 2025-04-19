@@ -3,9 +3,11 @@ import type { Menu } from "@/lib/types";
 // Admin dashboard UI for editing weekly meal plans
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 import { Button } from "../../components/ui/button";
 import MenuBuilder from "./MenuBuilder";
-import { DndContext, DragEndEvent } from "@dnd-kit/core";
+// Import DragDropContext from hello-pangea/dnd
+import { DragDropContext, DropResult } from "@hello-pangea/dnd";
 import { Select, SelectItem, SelectContent, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { getWeekStart } from "../../lib/weekUtils";
 
@@ -15,43 +17,137 @@ import WeeklyMealKanban from "./WeeklyMealKanban";
 // Types
 
 
+// Define weekDays constant for use in drag-and-drop logic
+const weekDays = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
+
 export default function WeeklyMealPlanAdmin() {
-  // ...existing code
-  // Ideally, define a Menu type elsewhere and import it
+  const [menus, setMenus] = useState<Menu[]>([]);
 
-const [menus, setMenus] = useState<Menu[]>([]);
+  type MenuPlan = {
+    menus: Menu[];
+    [key: string]: unknown;
+  };
 
-type MenuPlan = {
-  menus: Menu[];
-  [key: string]: unknown;
-};
-
-  // Drag-and-drop handler for both MenuBuilder and Kanban
-  function handleDragEnd(event: DragEndEvent) {
-    const { active, over } = event;
-    if (!active || !over) return;
-    const [menuId] = active.id.toString().split("|");
-    // If dropped over Menus list (unassigned), over.id === 'unassigned'
-    if (over.id === 'unassigned') {
-      const menu = menus.find(m => m.id === menuId);
-      if (!menu) return;
-      const newMenus = menus.map(m => m.id === menuId ? { ...m, assignedDay: undefined, assignedMoment: undefined } : m);
-      setMenus(newMenus);
-      return;
-    }
-    const [toDay, toMoment] = over.id.toString().split("|");
-    const menu = menus.find(m => m.id === menuId);
-    if (!menu || menu.category?.toUpperCase() !== toMoment) return;
-    if (menu.assignedDay === toDay && menu.assignedMoment === toMoment) return;
-    const newMenus = menus.map(m => m.id === menuId ? { ...m, assignedDay: toDay, assignedMoment: toMoment } : m);
-    setMenus(newMenus);
-  }
   const { t } = useTranslation();
-  // const { data: session } = useSession(); // removed unused variable
   const [selectedPerson, setSelectedPerson] = useState<string>("");
   const [weekStart, setWeekStart] = useState<Date>(getWeekStart(new Date()));
-  // Plan type is unknown, so use unknown and type guard when needed
-const [editPlan, setEditPlan] = useState<unknown>(null);
+  const [editPlan, setEditPlan] = useState<unknown>(null);
+  
+  // Add state to track drag operations for debugging
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragSource, setDragSource] = useState<string | null>(null);
+  const [dragDestination, setDragDestination] = useState<string | null>(null);
+  
+  // Handle all drag operations at the parent level
+  const handleDragStart = (start: any) => {
+    console.log('PARENT: Drag started', start);
+    setIsDragging(true);
+    setDragSource(start.source.droppableId);
+  };
+  
+  const handleDragUpdate = (update: any) => {
+    if (update.destination) {
+      setDragDestination(update.destination.droppableId);
+      console.log('PARENT: Dragging over', update.destination.droppableId);
+    } else {
+      setDragDestination(null);
+    }
+  };
+  
+  const handleDragEnd = (result: DropResult) => {
+    console.log('PARENT: Drag ended', result);
+    setIsDragging(false);
+    setDragSource(null);
+    setDragDestination(null);
+    
+    const { destination, source, draggableId } = result;
+    
+    // If there's no destination, do nothing
+    if (!destination) {
+      console.warn('PARENT: Drop failed - no destination');
+      return;
+    }
+    
+    // If dropped in same place, do nothing
+    if (destination.droppableId === source.droppableId && destination.index === source.index) {
+      console.log('PARENT: Dropped in same location, no changes needed');
+      return;
+    }
+    
+    // Find the dragged menu
+    const menu = menus.find(m => m.id === draggableId);
+    if (!menu) {
+      console.error('PARENT: Menu not found:', draggableId);
+      return;
+    }
+    
+    if (!menu.category) {
+      console.error('PARENT: Menu has no category:', menu);
+      return;
+    }
+    
+    // Get the meal type
+    const mealType = menu.category.toUpperCase();
+    console.log(`PARENT: Processing drop of menu type ${mealType} to ${destination.droppableId}`);
+    
+    // If destination is a day column, check if that day already has this meal type
+    if (weekDays.includes(destination.droppableId)) {
+      const day = destination.droppableId;
+      console.log(`PARENT: Dropping into day: ${day}`);
+      
+      // Check if this day already has this meal type
+      const dayMenus = menus.filter(m => m.assignedDay === day);
+      const existingMeal = dayMenus.find(m => 
+        m.category?.toUpperCase() === mealType && m.id !== menu.id
+      );
+      
+      if (existingMeal) {
+        console.warn(`PARENT: Day ${day} already has a ${menu.category}, showing error toast`);
+        toast.error(`${day} already has a ${menu.category}`);
+        return;
+      }
+      
+      console.log(`PARENT: Updating menu ${menu.id} to be assigned to ${day} as ${mealType}`);
+      // Update the menu's assigned day
+      const newMenus = menus.map(m => {
+        if (m.id === draggableId) {
+          return {
+            ...m,
+            assignedDay: day,
+            assignedMoment: mealType
+          };
+        }
+        return m;
+      });
+      
+      console.log('PARENT: Setting new menus state');
+      setMenus(newMenus);
+    } 
+    // If destination is unassigned, remove day assignment
+    else if (destination.droppableId === 'unassigned') {
+      console.log(`PARENT: Moving menu ${menu.id} to unassigned`);
+      const newMenus = menus.map(m => {
+        if (m.id === draggableId) {
+          const { assignedDay, assignedMoment, ...rest } = m;
+          return rest as Menu;
+        }
+        return m;
+      });
+      
+      console.log('PARENT: Setting new menus state');
+      setMenus(newMenus);
+    } else {
+      console.warn(`PARENT: Unknown drop destination: ${destination.droppableId}`);
+    }
+  };
   const queryClient = useQueryClient();
 
   // Fetch people (users)
@@ -143,18 +239,36 @@ mutationFn: async (newPlan: unknown) => {
           {t('managing_meals_for', 'Managing meals for:')} <span className="font-semibold">{people.find((p) => p.id === selectedPerson)?.name || people.find((p) => p.id === selectedPerson)?.email}</span>
         </div>
       )}
-      {/* Menu Builder */}
-      <DndContext onDragEnd={handleDragEnd}>
+      {/* Debug info */}
+      {isDragging && (
+        <div className="fixed top-0 left-0 bg-black/80 text-white p-2 text-xs z-50 rounded-br-lg">
+          Dragging from: {dragSource || 'unknown'}
+          {dragDestination && <> → to: {dragDestination}</>}
+        </div>
+      )}
+      
+      {/* Wrap both components in a single DragDropContext */}
+      <DragDropContext
+        onDragStart={handleDragStart}
+        onDragUpdate={handleDragUpdate}
+        onDragEnd={handleDragEnd}
+      >
         <section className="mb-6">
-          <MenuBuilder menus={menus} onMenusChange={setMenus} personId={selectedPerson} />
+          <MenuBuilder 
+            menus={menus} 
+            onMenusChange={setMenus} 
+            personId={selectedPerson} 
+            parentIsDragging={isDragging} 
+          />
         </section>
         {typeof editPlan === 'object' && editPlan !== null && (
           <WeeklyMealKanban
             menus={menus}
             onMenusChange={setMenus}
+            parentIsDragging={isDragging}
           />
         )}
-      </DndContext>
+      </DragDropContext>
       <Button
         onClick={() => mutation.mutate({
           person: selectedPerson,

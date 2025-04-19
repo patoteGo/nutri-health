@@ -4,13 +4,11 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Select, SelectItem, SelectContent, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { Tooltip, TooltipTrigger, TooltipContent } from "../../components/ui/tooltip";
-
-import { DndContext, PointerSensor, useSensor, useSensors, useDroppable } from "@dnd-kit/core";
-import DraggableMenuCard from "./DraggableMenuCard";
+import { useTranslation } from "react-i18next";
+import { Droppable, Draggable } from "@hello-pangea/dnd";
 import type { Menu, Ingredient } from "@/lib/types";
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { z } from "zod";
-
 import { toast } from "sonner";
 
 const IngredientSchema = z.object({
@@ -23,37 +21,26 @@ const IngredientSchema = z.object({
   unit: z.string().optional().nullable(),
 });
 
-
-
-
-
 const categories = ["Breakfast", "Lunch", "Dinner", "Snack"];
 
-
-// MenuBuilder now requires personId as a prop
-import { useTranslation } from "react-i18next";
-
-function MenuBuilder({
-  menus,
-  onMenusChange,
-  personId,
-}: {
+interface MenuBuilderProps {
   menus: Menu[];
   onMenusChange: (menus: Menu[]) => void;
   personId: string;
-}) {
-  // dnd-kit sensors: PointerSensor supports both mouse and touch for mobile compatibility
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8, // Prevent accidental drag on mobile
-      },
-    })
-  );
-  // ...existing hooks
-  const unassignedMenus = menus.filter(menu => !menu.assignedDay && !menu.assignedMoment);
-  const { setNodeRef: unassignedSetNodeRef, isOver: unassignedIsOver } = useDroppable({ id: 'unassigned' });
+  parentIsDragging?: boolean;
+}
+
+export default function MenuBuilder({ menus, onMenusChange, personId, parentIsDragging = false }: MenuBuilderProps) {
   const { t } = useTranslation();
+  const unassignedMenus = menus.filter(menu => !menu.assignedDay && !menu.assignedMoment);
+  
+  // Debug logging
+  React.useEffect(() => {
+    if (parentIsDragging) {
+      console.log('MenuBuilder: Parent is dragging');
+    }
+  }, [parentIsDragging]);
+
   const [menuName, setMenuName] = useState("");
   const [category, setCategory] = useState(categories[0]);
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
@@ -169,123 +156,114 @@ function MenuBuilder({
     menuMutation.mutate({ name: menuName, category, personId, ingredients });
   }
 
-
   return (
-    <DndContext sensors={sensors} /* Add your onDragEnd, collisionDetection, etc. as needed */>
-      <div className="border rounded p-4 mb-6 bg-muted/20">
-      <h2 className="text-xl font-semibold mb-2">{t('menu_builder_title', 'Menu Builder')}</h2>
-      <div className="flex flex-col gap-2 mb-4">
-        <Input
-          placeholder={t('menu_name', 'Menu name')}
-          value={menuName}
-          onChange={e => setMenuName(e.target.value)}
-          className="w-full"
-        />
-        <Select value={category} onValueChange={setCategory}>
-          <SelectTrigger className="w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {categories.map(cat => (
-              <SelectItem key={cat} value={cat}>{t(cat.toLowerCase(), cat)}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <div className="flex gap-2 items-start">
-          <div className="flex-1 relative">
+    <div className="grid lg:grid-cols-2 gap-6">
+      {/* First column - Menu building form */}
+      <div className="rounded-lg border p-4 bg-white shadow-sm">
+        <h3 className="font-medium mb-2">{t('new_menu', 'New Menu')}</h3>
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="menu-name" className="block text-sm font-medium mb-1">
+              {t('name', 'Name')}
+            </label>
             <Input
-              placeholder={t('search_ingredient', 'Search ingredient...')}
-              value={selectedIngredient ? selectedIngredient.name : ingredientQuery}
-              onChange={e => {
-                setIngredientQuery(e.target.value);
-                setSelectedIngredient(null);
-              }}
-              className="w-full"
-              autoComplete="off"
+              id="menu-name"
+              value={menuName}
+              onChange={e => setMenuName(e.target.value)}
+              placeholder={t('menu_name_placeholder', 'Enter menu name')}
             />
-            {ingredientLoading && (
-              <div className="absolute left-0 top-full bg-white border w-full z-10 p-2 text-xs">{t('loading', 'Loading...')}</div>
-            )}
-            {ingredientError && (
-              <div className="absolute left-0 top-full bg-destructive text-destructive-foreground border w-full z-10 p-2 text-xs">{ingredientError}</div>
-            )}
-            {ingredientOptions.length > 0 && !selectedIngredient && (
-              <ul className="absolute left-0 top-full bg-white border w-full z-10 max-h-48 overflow-auto">
-                {ingredientOptions.map(opt => (
-                  <li
-                    key={opt.id}
-                    className="p-2 hover:bg-accent cursor-pointer text-sm flex flex-col"
-                    onClick={() => {
-                      setSelectedIngredient(opt);
-                      setIngredientQuery(opt.name);
-                    }}
-                  >
-                    <span className="font-medium">{t(`ingredient_${opt.name.toLowerCase().replace(/\s+/g, '_')}`, opt.name)}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {opt.carbs}g carbs, {opt.protein}g protein, {opt.fat}g fat / 100g
-                    </span>
-                  </li>
+          </div>
+          <div>
+            <label htmlFor="category" className="block text-sm font-medium mb-1">
+              {t('category', 'Category')}
+            </label>
+            <Select value={category} onValueChange={setCategory}>
+              <SelectTrigger id="category">
+                <SelectValue placeholder={t('select_category', 'Select category')} />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map(cat => (
+                  <SelectItem key={cat} value={cat}>
+                    {t(`category_${cat.toLowerCase()}`, cat)}
+                  </SelectItem>
                 ))}
-              </ul>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label htmlFor="ingredients" className="block text-sm font-medium mb-1">
+              {t('ingredients', 'Ingredients')}
+            </label>
+            <div className="flex items-start gap-2 mb-1">
+              <div className="flex-1 relative">
+                <Input
+                  id="ingredients"
+                  value={ingredientQuery}
+                  onChange={e => setIngredientQuery(e.target.value)}
+                  placeholder={t('search_ingredients', 'Search ingredients')}
+                />
+                {ingredientOptions.length > 0 && (
+                  <div className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md border max-h-60 overflow-auto">
+                    {ingredientOptions.map(ing => (
+                      <button
+                        key={ing.id}
+                        type="button"
+                        className="w-full text-left px-3 py-2 hover:bg-muted flex justify-between items-center"
+                        onClick={() => {
+                          setSelectedIngredient(ing);
+                          setIngredientQuery(ing.name);
+                        }}
+                      >
+                        <span>{ing.name}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {ing.carbs}C {ing.protein}P {ing.fat}F
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {ingredientLoading && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <svg className="animate-spin h-4 w-4 text-muted-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  </div>
+                )}
+              </div>
+              <div className="w-24">
+                <Input
+                  type="number"
+                  value={ingredientWeight || ''}
+                  onChange={e => setIngredientWeight(parseInt(e.target.value) || 0)}
+                  placeholder="g"
+                  disabled={!selectedIngredient}
+                />
+              </div>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    onClick={addIngredient}
+                    disabled={!selectedIngredient || ingredientWeight <= 0 || isDuplicate}
+                    size="icon"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {t('add_ingredient', 'Add ingredient')}
+                </TooltipContent>
+              </Tooltip>
+            </div>
+            {isDuplicate && (
+              <div className="text-destructive text-sm mt-1 flex items-center gap-1" role="alert">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" aria-hidden="true"><path stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01m-6.938 2h13.856c1.54 0 2.502-1.667 1.732-3L13.732 5c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                {t('ingredient_already_in_list', 'This ingredient is already on the list.')}
+              </div>
             )}
           </div>
-          <Input
-            type="number"
-            placeholder={
-              selectedIngredient?.unit === 'GRAM' ? t('weight_in_grams', 'Weight in grams')
-              : selectedIngredient?.unit === 'ML' ? t('volume_in_milliliters', 'Volume in milliliters')
-              : selectedIngredient?.unit ? t('quantity_with_unit', `Quantity (${selectedIngredient.unit.toLowerCase()})`)
-              : t('amount', 'Amount')
-            }
-            value={ingredientWeight || ""}
-            onChange={e => setIngredientWeight(
-              selectedIngredient && [
-                'UNIT', 'SLICE', 'TEASPOON', 'TABLESPOON', 'PIECE', 'CUP'
-              ].includes(selectedIngredient.unit || '')
-                ? Math.max(1, Math.floor(Number(e.target.value)))
-                : Number(e.target.value)
-            )}
-            className="w-28"
-            min={1}
-            step={
-              selectedIngredient && [
-                'UNIT', 'SLICE', 'TEASPOON', 'TABLESPOON', 'PIECE', 'CUP'
-              ].includes(selectedIngredient.unit || '') ? 1 : 0.1
-            }
-            inputMode={
-              selectedIngredient && [
-                'UNIT', 'SLICE', 'TEASPOON', 'TABLESPOON', 'PIECE', 'CUP'
-              ].includes(selectedIngredient.unit || '') ? 'numeric' : 'decimal'
-            }
-            aria-label={
-              selectedIngredient?.unit === 'GRAM' ? t('weight_in_grams', 'Weight in grams')
-              : selectedIngredient?.unit === 'ML' ? t('volume_in_milliliters', 'Volume in milliliters')
-              : selectedIngredient?.unit ? t('quantity_with_unit', `Quantity (${selectedIngredient.unit.toLowerCase()})`)
-              : t('amount', 'Amount')
-            }
-          />
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                type="button"
-                onClick={addIngredient}
-                variant="outline"
-                disabled={!selectedIngredient || ingredientWeight <= 0 || isDuplicate}
-                title={isDuplicate ? t('ingredient_already_in_list', 'This ingredient is already in the list') : ''}
-                aria-label="Add Ingredient"
-              >
-                +
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Add Ingredient / Adicionar ingrediente</TooltipContent>
-          </Tooltip>
         </div>
-        {isDuplicate && (
-          <div className="text-destructive text-sm mt-1 flex items-center gap-1" role="alert">
-            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" aria-hidden="true"><path stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01m-6.938 2h13.856c1.54 0 2.502-1.667 1.732-3L13.732 5c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-            {t('ingredient_already_in_list', 'This ingredient is already on the list.')}
-          </div>
-        )}
         <ul className="list-disc ml-6 mt-2 text-sm">
           {ingredients.map((ing, idx) => (
             <li key={idx} className="flex items-center gap-3 py-2">
@@ -293,26 +271,18 @@ function MenuBuilder({
                 type="button"
                 aria-label="Delete ingredient"
                 title="Delete ingredient"
-                className="mr-2 p-1 rounded hover:bg-destructive/10 transition-colors"
+                className="text-destructive hover:bg-destructive/10 rounded-full p-1"
                 onClick={() => {
-                  setIngredients(ingredients => ingredients.filter((_, i) => i !== idx));
+                  setIngredients(prev => prev.filter((_, i) => i !== idx));
                 }}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-destructive"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
               </button>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={ing.imageUrl || '/placeholder-ingredient.png'}
-                alt={ing.name}
-                className="w-10 h-10 object-cover rounded-md border"
-                style={{ minWidth: 40, minHeight: 40 }}
-                onError={e => (e.currentTarget.src = '/placeholder-ingredient.png')}
-              />
               <div className="flex-1 flex flex-col">
                 <span>{t(`ingredient_${ing.name.toLowerCase().replace(/\s+/g, '_')}`, ing.name)} — {ing.weight}{
                   ing.unit === 'GRAM' ? 'g'
                   : ing.unit === 'ML' ? 'ml'
-                  : ing.unit ? ` (${ing.unit.toLowerCase()})`
+                  : ing.unit ? ` (${ing.unit.toLowerCase()})` 
                   : ''
                 }</span>
                 <span className="text-xs text-muted-foreground">
@@ -327,43 +297,78 @@ function MenuBuilder({
             </li>
           ))}
         </ul>
-        <Button type="button" onClick={addMenu} className="mt-2" disabled={!menuName || ingredients.length === 0}>
+        <Button type="button" onClick={addMenu} className="mt-4" disabled={!menuName || ingredients.length === 0}>
           {t('add_menu', 'Add Menu')}
         </Button>
       </div>
-      <div>
-        <h3 className="font-medium mb-1">{t('menus', 'Menus')}</h3>
-        {/* Droppable area for unassigned menus */}
-        {/* Droppable area for unassigned menus */}
-        {/* Move useDroppable to top-level in component for React Hook rules compliance */}
-         <ul
-           ref={unassignedSetNodeRef}
-           className={
-             "space-y-2 min-h-[48px] p-1 rounded border border-dashed " +
-             (unassignedIsOver ? "bg-accent/20 border-primary" : "border-muted-foreground/20 bg-white")
-           }
-           style={{ transition: 'background 0.2s, border-color 0.2s' }}
-         >
-           {unassignedMenus.length === 0 && (
-             <div className="text-muted-foreground text-sm">{t('no_menus_yet', 'No menus yet.')}</div>
-           )}
-            {unassignedMenus.map(menu => (
-              <li key={menu.id} className="mb-4">
-                {/* Pass the deleteMenuMutation directly to the DraggableMenuCard component */}
-                <DraggableMenuCard
-                  menu={menu}
-                  day="unassigned"
-                  mealMoment="unassigned"
-                  onDelete={() => deleteMenuMutation.mutate(menu.id)}
-                />
-              </li>
-            ))}
-         </ul>
-       </div>
-     </div>
-    </DndContext>
+
+      {/* Second column - Unassigned menus */}
+      <div className="h-auto">
+        <h3 className="font-medium mb-2">{t('unassigned_menus', 'Unassigned Menus')} ({unassignedMenus.length})</h3>
+        <Droppable droppableId="unassigned" type="menu">
+          {(provided, snapshot) => (
+            <div 
+              {...provided.droppableProps}
+              ref={provided.innerRef} 
+              className={`border rounded-lg p-4 bg-muted/50 min-h-[120px] transition-all grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 ${snapshot.isDraggingOver ? 'ring-2 ring-primary' : ''}`}
+            >
+              {unassignedMenus.length === 0 ? (
+                <p className="text-sm text-muted-foreground italic">{t('no_unassigned_menus', 'No unassigned menus')}</p>
+              ) : (
+                unassignedMenus.map((menu, index) => (
+                  <Draggable key={menu.id} draggableId={menu.id} index={index}>
+                    {(provided, snapshot) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        {...provided.dragHandleProps}
+                        className={`p-2 bg-white shadow border hover:bg-accent transition select-none relative ${snapshot.isDragging ? "ring-2 ring-primary" : ""}`}
+                        style={{
+                          ...provided.draggableProps.style,
+                          zIndex: snapshot.isDragging ? 100 : 'auto',
+                          // Set fixed width when dragging to match day columns
+                          ...(snapshot.isDragging ? {
+                            width: '180px', 
+                            maxWidth: '180px'
+                          } : {})
+                        }}
+                      >
+                        <div className="flex justify-between items-center gap-2 mb-1">
+                          <span className="font-medium">{menu.name}</span>
+                          <Button 
+                            size="icon" 
+                            variant="ghost" 
+                            className="h-6 w-6 text-destructive hover:bg-destructive/10"
+                            onClick={() => deleteMenuMutation.mutate(menu.id)}
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></svg>
+                          </Button>
+                        </div>
+                        {menu.category && (
+                          <span className="inline-block text-xs rounded bg-muted px-2 py-0.5 mb-1">
+                            {menu.category}
+                          </span>
+                        )}
+                        {menu.ingredients && menu.ingredients.length > 0 && (
+                          <ul className="text-xs text-muted-foreground pl-4 list-disc">
+                            {menu.ingredients.map((ingredient, idx) => (
+                              <li key={idx}>
+                                {ingredient.name}
+                                {ingredient.weight ? ` (${ingredient.weight}g)` : ""}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    )}
+                  </Draggable>
+                ))
+              )}
+              {provided.placeholder}
+            </div>
+          )}
+        </Droppable>
+      </div>
+    </div>
   );
 }
-
-MenuBuilder.displayName = "MenuBuilder";
-export default MenuBuilder;

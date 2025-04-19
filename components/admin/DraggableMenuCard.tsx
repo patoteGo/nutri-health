@@ -26,9 +26,21 @@ interface DraggableMenuCardProps {
 
 const DraggableMenuCard: React.FC<DraggableMenuCardProps> = React.memo(({ menu, day, mealMoment, onDelete }) => {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-    id: `${menu.id}|${day}|${mealMoment}`,
+    id: menu.id, // Simplify ID to just the menu ID, this is what handleDragEnd expects
     data: { menuId: menu.id, day, mealMoment },
   });
+
+  // Add debugging for drag state
+  React.useEffect(() => {
+    if (isDragging) {
+      console.log('Dragging menu:', { 
+        id: menu.id, 
+        name: menu.name, 
+        category: menu.category,
+        from: { day, mealMoment }
+      });
+    }
+  }, [isDragging, menu, day, mealMoment]);
 
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -41,8 +53,12 @@ const DraggableMenuCard: React.FC<DraggableMenuCardProps> = React.memo(({ menu, 
         style={{
           transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
           opacity: isDragging ? 0.5 : 1,
-          zIndex: isDragging ? 50 : 1,
+          zIndex: isDragging ? 100 : 1,
           cursor: "grab",
+          touchAction: "none", // Required for mobile drag support
+          minWidth: isDragging ? 180 : undefined,
+          width: isDragging ?  "100%" : undefined,
+          maxWidth: isDragging ? 400 : undefined,
         }}
         className={
           "p-2 bg-white shadow border hover:bg-accent transition select-none relative flex-1" +
