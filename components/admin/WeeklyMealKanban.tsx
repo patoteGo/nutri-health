@@ -159,9 +159,8 @@ const WeeklyMealKanban: React.FC<WeeklyMealKanbanProps> = ({ menus, weekStart, o
 
   return (
     <div className="overflow-x-auto">
-      <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <div className="flex gap-4 min-w-[1200px]">
-          {weekDays.map((day) => (
+      <div className="flex gap-4 min-w-[1200px]">
+        {weekDays.map((day) => (
             <div key={day} className="flex-1 min-w-[180px]">
               <div className="font-bold text-center mb-4 text-lg tracking-wide uppercase bg-muted rounded-t-lg py-2 shadow-sm border-b border-muted-foreground/10">
                 {day}
@@ -202,7 +201,6 @@ const WeeklyMealKanban: React.FC<WeeklyMealKanbanProps> = ({ menus, weekStart, o
             </div>
           ))}
         </div>
-      </DndContext>
     </div>
   );
 };
