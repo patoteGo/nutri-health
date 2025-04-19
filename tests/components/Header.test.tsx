@@ -19,7 +19,10 @@ const mockPathname = (path: string | null) => {
 };
 
 vi.mock("next-auth/react", () => ({
-  useSession: vi.fn(),
+  useSession: () => ({
+    data: { user: { name: "Test User", email: "test@example.com" } },
+    status: "authenticated",
+  }),
   signIn: vi.fn(),
   signOut: vi.fn(),
 }));

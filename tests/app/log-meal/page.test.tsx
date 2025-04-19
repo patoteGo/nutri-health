@@ -8,6 +8,17 @@ import { I18nextProvider } from "react-i18next";
 import i18n from "@/i18n";
 import '@testing-library/jest-dom';
 
+import { vi } from 'vitest';
+
+vi.mock("next-auth/react", () => ({
+  useSession: () => ({
+    data: { user: { name: "Test User", email: "test@example.com" } },
+    status: "authenticated",
+  }),
+  signIn: vi.fn(),
+  signOut: vi.fn(),
+}));
+
 // Helper function to select an option from a Shadcn UI Select component
 async function selectOption(label: string | RegExp, optionText: string) {
   const user = userEvent.setup();

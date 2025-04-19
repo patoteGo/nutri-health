@@ -1,12 +1,11 @@
 // LanguageSwitcher is now globally available via Header (layout.tsx)
 "use client";
 import React from "react";
-import { useState, ChangeEvent } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { ImageUploadButton } from "@/components/ui/image-upload-button";
-import clsx from "clsx";
 
 // Mock data for selectors (replace with real data fetching later)
 const people = [

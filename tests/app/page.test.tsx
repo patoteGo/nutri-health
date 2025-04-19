@@ -8,6 +8,15 @@ import { I18nextProvider } from 'react-i18next';
 import LanguageProvider from '../../components/LanguageProvider';
 import Header from '../../components/Header';
 
+vi.mock("next-auth/react", () => ({
+  useSession: () => ({
+    data: { user: { name: "Test User", email: "test@example.com" } },
+    status: "authenticated",
+  }),
+  signIn: vi.fn(),
+  signOut: vi.fn(),
+}));
+
 // Reason: Render component within the global layout structure (Provider + Header) for accurate testing
 function renderWithI18n(ui: React.ReactElement) {
   return render(
