@@ -2,13 +2,11 @@
 // Admin dashboard UI for editing weekly meal plans
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-// import { z } from "zod"; // removed unused import
 import { Button } from "../../components/ui/button";
 import MenuBuilder from "./MenuBuilder";
 import { DndContext, DragEndEvent } from "@dnd-kit/core";
 import { Select, SelectItem, SelectContent, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { getWeekStart } from "../../lib/weekUtils";
-// import { WeeklyMealPlanSchema, MealMoment } from "../../lib/types"; // removed unused imports
 import { useSession } from "next-auth/react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import WeeklyMealKanban from "./WeeklyMealKanban";

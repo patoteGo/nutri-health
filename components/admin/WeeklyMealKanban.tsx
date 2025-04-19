@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import React from "react";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { mealMoments } from "@/lib/weekUtils";
 import { Card } from "../ui/card";
