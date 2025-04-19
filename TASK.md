@@ -40,7 +40,16 @@
 - [ ] Add Vercel deployment config
 
 ## In Progress
-- [ ] Admin Dashboard: Add/Edit weekly meals for each person (six meal moments per day, full week, authentication required) [2025-04-19]
+- [ ] Admin Dashboard Epic: Build advanced weekly meal planner for each person [2025-04-19]
+  - [ ] Step 1: Person Selector — Select a person from the DB to manage their meals [2025-04-19]
+  - [ ] Step 2: Menu Builder — Create/edit menus (meals) with:
+      - Ingredients (with weights)
+      - Categories (Lunch, Dinner, etc.) [2025-04-19]
+  - [ ] Step 3: Drag-and-Drop UI — Assign built menus to each day/meal moment in a weekly calendar (drag and drop support) [2025-04-19]
+  - [ ] Step 4: Save/Update — Persist weekly plan changes for the selected person [2025-04-19]
+  - [ ] Step 5: API & DB — Ensure backend supports menus, ingredients, assignments, and validation [2025-04-19]
+  - [ ] Step 6: Tests — Add/expand unit and integration tests for all new features [2025-04-19]
+  - [ ] Step 7: UI Polish — Improve UX, loading, error states, and accessibility [2025-04-19]
 - [ ] Tailwind & ShadCN setup
 - [ ] NextAuth.js configuration
 

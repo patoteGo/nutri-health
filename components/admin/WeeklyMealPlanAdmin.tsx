@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { z } from "zod";
 import { Button } from "../../components/ui/button";
-import { Select, SelectItem, SelectContent } from "../../components/ui/select";
+import { Select, SelectItem, SelectContent, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { getWeekStart, getWeekDays, mealMoments } from "../../lib/weekUtils";
 import { WeeklyMealPlanSchema, MealMoment } from "../../lib/types";
 import { useSession } from "next-auth/react";
@@ -22,10 +22,11 @@ export default function WeeklyMealPlanAdmin({ userEmail }: WeeklyMealPlanAdminPr
   const queryClient = useQueryClient();
 
   // Fetch people (users)
-  const { data: people } = useQuery({
+  const { data: people, isLoading: peopleLoading, error: peopleError } = useQuery({
     queryKey: ["people"],
     queryFn: async () => {
       const res = await fetch("/api/admin/people");
+      if (!res.ok) throw new Error("Failed to fetch users");
       return await res.json();
     },
   });
@@ -67,21 +68,42 @@ export default function WeeklyMealPlanAdmin({ userEmail }: WeeklyMealPlanAdminPr
   return (
     <div className="max-w-5xl mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Admin: Weekly Meal Plan</h1>
-      <div className="flex gap-4 mb-4">
-        <Select value={selectedPerson} onValueChange={setSelectedPerson} placeholder="Select person">
-          <SelectContent>
-            {people?.map((p: any) => (
-              <SelectItem key={p.id} value={p.id}>{p.name || p.email}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div className="flex gap-4 mb-4 items-end">
+        <div className="flex flex-col w-64">
+          <label htmlFor="person-select" className="mb-1 text-sm font-medium">Select person</label>
+          <Select value={selectedPerson} onValueChange={setSelectedPerson} disabled={peopleLoading || !!peopleError || !people?.length}>
+            <SelectTrigger className="w-full" id="person-select">
+              <SelectValue placeholder={peopleLoading ? "Loading..." : peopleError ? "Error loading users" : "Select person"} />
+            </SelectTrigger>
+            <SelectContent>
+              {peopleLoading && <div className="px-4 py-2 text-muted-foreground">Loading...</div>}
+              {peopleError && <div className="px-4 py-2 text-destructive">Error loading users</div>}
+              {!peopleLoading && !peopleError && (!people || people.length === 0) && (
+                <div className="px-4 py-2 text-muted-foreground">No users found</div>
+              )}
+              {people && people.length > 0 && people.map((p: any) => (
+                <SelectItem key={p.id} value={p.id}>{p.name || p.email}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         {/* Week picker could be improved */}
-        <input
-          type="date"
-          value={weekStart.toISOString().slice(0, 10)}
-          onChange={e => setWeekStart(new Date(e.target.value))}
-        />
+        <div className="flex flex-col">
+          <label htmlFor="week-picker" className="mb-1 text-sm font-medium">Week start</label>
+          <input
+            id="week-picker"
+            type="date"
+            value={weekStart.toISOString().slice(0, 10)}
+            onChange={e => setWeekStart(new Date(e.target.value))}
+            className="border rounded px-2 py-1"
+          />
+        </div>
       </div>
+      {selectedPerson && people && (
+        <div className="mb-4 text-base">
+          Managing meals for: <span className="font-semibold">{people.find((p: any) => p.id === selectedPerson)?.name || people.find((p: any) => p.id === selectedPerson)?.email}</span>
+        </div>
+      )}
       {editPlan && (
         <table className="w-full border mb-4">
           <thead>
