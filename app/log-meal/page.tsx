@@ -5,6 +5,7 @@ import { useState, ChangeEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { ImageUploadButton } from "@/components/ui/image-upload-button";
 import clsx from "clsx";
 
 // Mock data for selectors (replace with real data fetching later)
@@ -188,23 +189,12 @@ function MealPartsList() {
           {/* Image Input */}
           <div className="flex flex-col items-center">
             <label className="block text-xs mb-1">{t('image', 'Image')}</label>
-            <Input
-              type="file"
-              accept="image/*"
-              onChange={(e) => {
-                if (e.target.files && e.target.files[0]) {
-                  handleChange(idx, 'image', e.target.files[0]);
-                }
-              }}
+            <ImageUploadButton
+              onChange={(file) => handleChange(idx, 'image', file)}
               aria-label={t('image', 'Image')}
+              imageUrl={part.imageUrl}
+              buttonLabel={t('image', 'Image')}
             />
-            {part.imageUrl && (
-              <img
-                src={part.imageUrl}
-                alt={t('preview', 'Preview')}
-                className="mt-1 w-12 h-12 object-cover rounded"
-              />
-            )}
           </div>
         </div>
       ))}
