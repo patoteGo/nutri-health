@@ -1,4 +1,42 @@
-import { vi } from 'vitest';
+import { vi, expect } from 'vitest';
+import '@testing-library/jest-dom';
+import * as matchers from '@testing-library/jest-dom/matchers';
+
+// Extend Vitest's expect method with jest-dom matchers
+expect.extend(matchers);
+
+// # Reason: Mock next-auth for tests that use useSession
+// This prevents "useSession must be wrapped in SessionProvider" errors
+vi.mock('next-auth/react', () => {
+  const mockSession = {
+    expires: new Date(Date.now() + 2 * 86400).toISOString(),
+    user: { name: 'Test User', email: 'test@example.com' }
+  };
+  
+  return {
+    useSession: vi.fn(() => {
+      return { data: mockSession, status: 'authenticated' };
+    }),
+    signIn: vi.fn(),
+    signOut: vi.fn(),
+    getSession: vi.fn(() => mockSession),
+    SessionProvider: ({ children }: { children: any }) => children
+  };
+});
+
+// # Reason: Mock next-themes to prevent errors with window.matchMedia
+vi.mock('next-themes', () => {
+  return {
+    ThemeProvider: ({ children }: { children: React.ReactNode }) => children,
+    useTheme: () => ({
+      theme: 'light',
+      setTheme: vi.fn(),
+      themes: ['light', 'dark', 'system'],
+      resolvedTheme: 'light',
+      systemTheme: 'light',
+    }),
+  };
+});
 
 // # Reason: Polyfill for PointerEvent API missing in JSDOM (used by Vitest/Testing Library)
 // Needed for Radix UI components that use pointer events.
@@ -12,21 +50,35 @@ if (typeof Element.prototype.scrollIntoView === 'undefined') {
   Element.prototype.scrollIntoView = () => {};
 }
 
-import '@testing-library/jest-dom';
+// # Reason: Polyfill for ResizeObserver API missing in JSDOM
+// Needed for Radix UI components that use ResizeObserver
+class ResizeObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
 
-// Global mock for window.matchMedia for all tests
-if (typeof window !== 'undefined' && !window.matchMedia) {
-  window.matchMedia = vi.fn().mockImplementation((query) => ({
+// Set both window and global ResizeObserver mocks
+if (typeof window !== 'undefined' && !window.ResizeObserver) {
+  window.ResizeObserver = ResizeObserverMock;
+}
+global.ResizeObserver = ResizeObserverMock;
+
+// Mock window.matchMedia for next-themes
+// This is needed by next-themes package which uses window.matchMedia
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: vi.fn().mockImplementation(query => ({
     matches: false,
     media: query,
     onchange: null,
-    addListener: vi.fn(),
-    removeListener: vi.fn(),
+    addListener: vi.fn(), // Deprecated
+    removeListener: vi.fn(), // Deprecated
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
     dispatchEvent: vi.fn(),
-  }));
-}
+  })),
+});
 
 // Import React globally for all tests to avoid 'React is not defined' errors
 import React from 'react';
@@ -89,8 +141,3 @@ declare global {
 if (process.env.NODE_ENV === 'test' && typeof global !== 'undefined') {
   global.i18n = i18n;
 }
-
-// # Reason: `import '@testing-library/jest-dom'` handles extending expect globally.
-// Explicitly importing `matchers` and calling `expect.extend` is often redundant and can cause issues.
-// import matchers from '@testing-library/jest-dom/matchers';
-import { expect } from 'vitest';

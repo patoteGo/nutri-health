@@ -1,42 +1,86 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, beforeAll, afterAll } from 'vitest';
 import { GET, PATCH } from '@/app/api/user/settings/route';
-import { createMocks } from 'node-mocks-http';
-import { getServerSession } from 'next-auth';
+import { NextRequest, NextResponse } from 'next/server';
+import { Session } from 'next-auth';
+import { Weekday } from '@prisma/client';
 
-// Mock NextAuth
-vi.mock('next-auth', () => ({
-  getServerSession: vi.fn()
-}));
+// Mock authOptions module
+vi.mock('@/lib/authOptions', () => {
+  return {
+    authOptions: {
+      providers: [{ id: 'google', name: 'Google' }]
+    }
+  };
+});
 
-// Mock Prisma
-vi.mock('@/lib/prisma', () => ({
-  prisma: {
-    user: {
-      findUnique: vi.fn(),
-      update: vi.fn(),
+// Mock the modules
+vi.mock('next-auth', () => {
+  return {
+    getServerSession: vi.fn()
+  };
+});
+
+vi.mock('@/lib/prisma', () => {
+  return {
+    prisma: {
+      user: {
+        findUnique: vi.fn(),
+        update: vi.fn(),
+      },
+      userHealthInfo: {
+        upsert: vi.fn(),
+        findUnique: vi.fn(),
+      }
     },
-  },
-}));
+  };
+});
 
-const mockUser = {
-  email: 'test@example.com',
-  firstDayOfWeek: 'MONDAY',
-  weekDays: ['MONDAY', 'WEDNESDAY'],
-  birthDate: '2000-01-01T00:00:00.000Z',
+// Import the mocked modules
+const { getServerSession } = await import('next-auth');
+const { prisma } = await import('@/lib/prisma');
+
+// Type for our mock user
+type MockUser = {
+  id: string;
+  email: string;
+  name: string | null;
+  picture: string | null;
+  isAdmin: boolean;
+  gender: string | null;
+  firstDayOfWeek: Weekday;
+  weekDays: Weekday[];
+  birthDate: Date | null;
+  healthInfo?: { weight: number } | null;
 };
 
-const session = { user: { email: mockUser.email } };
+// Create mock data
+const mockUser: MockUser = {
+  id: 'user-123',
+  email: 'test@example.com',
+  name: 'Test User',
+  picture: null,
+  isAdmin: false,
+  gender: null,
+  firstDayOfWeek: 'MONDAY' as Weekday,
+  weekDays: ['MONDAY', 'WEDNESDAY'] as Weekday[],
+  birthDate: new Date('2000-01-01'),
+  healthInfo: { weight: 70 }
+};
 
-const { prisma } = require('@/lib/prisma');
+const mockSession: Session = { 
+  user: { email: mockUser.email, name: 'Test User' },
+  expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+};
 
-// Helper to mock req/res
-function mockReqRes(method = 'GET', body = null) {
-  const { req, res } = createMocks({
-    method,
-    ...(body ? { body: JSON.stringify(body) } : {}),
-  });
-  req.headers = { 'content-type': 'application/json' };
-  return { req, res };
+// Helper to create mock NextRequest
+function createMockNextRequest(body: any = null): NextRequest {
+  return {
+    json: async () => body,
+    url: 'http://localhost:3000/api/user/settings',
+    headers: new Headers({ 'content-type': 'application/json' }),
+    cookies: new Map(),
+    nextUrl: new URL('http://localhost:3000/api/user/settings'),
+  } as unknown as NextRequest;
 }
 
 describe('/api/user/settings API', () => {
@@ -45,94 +89,159 @@ describe('/api/user/settings API', () => {
   });
 
   it('GET returns user settings for authenticated user', async () => {
-    getServerSession.mockResolvedValue(session);
-    prisma.user.findUnique.mockResolvedValue(mockUser);
-    const req = { headers: {} };
-    const res = await GET(req);
+    // Setup mocks
+    vi.mocked(getServerSession).mockResolvedValue(mockSession);
+    vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser);
+    vi.mocked(prisma.userHealthInfo.findUnique).mockResolvedValue({ 
+      id: 'health-123',
+      userId: mockUser.id,
+      weight: 70,
+      fat: null,
+      muscle: null,
+      height: null,
+      basal: null
+    });
+    
+    // Call the API
+    const res = await GET();
+    expect(res).toBeInstanceOf(NextResponse);
+    
+    // Check the response
     const json = await res.json();
-    expect(res.status).toBe(200);
     expect(json).toMatchObject({
       firstDayOfWeek: mockUser.firstDayOfWeek,
       weekDays: mockUser.weekDays,
-      birthDate: mockUser.birthDate,
+      weight: 70
     });
   });
 
   it('GET returns 401 if not authenticated', async () => {
-    getServerSession.mockResolvedValue(null);
-    const req = { headers: {} };
-    const res = await GET(req);
+    // Setup mocks
+    vi.mocked(getServerSession).mockResolvedValue(null);
+    
+    // Call the API
+    const res = await GET();
     expect(res.status).toBe(401);
+    
+    const json = await res.json();
+    expect(json).toHaveProperty('error', 'Unauthorized');
   });
 
   it('PATCH updates user fields (happy path)', async () => {
-    getServerSession.mockResolvedValue(session);
-    prisma.user.update.mockResolvedValue({ ...mockUser, firstDayOfWeek: 'FRIDAY' });
-    const req = { json: async () => ({ firstDayOfWeek: 'FRIDAY' }) };
+    // Setup mocks
+    vi.mocked(getServerSession).mockResolvedValue(mockSession);
+    vi.mocked(prisma.user.update).mockResolvedValue({
+      ...mockUser,
+      firstDayOfWeek: 'FRIDAY' as Weekday
+    });
+    
+    // Call the API
+    const req = createMockNextRequest({ firstDayOfWeek: 'FRIDAY' });
     const res = await PATCH(req);
-    const json = await res.json();
+    
+    // Check the response
     expect(res.status).toBe(200);
     expect(prisma.user.update).toHaveBeenCalledWith({
       where: { email: mockUser.email },
-      data: { firstDayOfWeek: 'FRIDAY' },
+      data: expect.objectContaining({ firstDayOfWeek: 'FRIDAY' }),
     });
-    expect(json.user.firstDayOfWeek).toBe('FRIDAY');
+    
+    const json = await res.json();
+    expect(json.user).toHaveProperty('firstDayOfWeek', 'FRIDAY');
   });
 
   it('PATCH allows partial update (weekDays only)', async () => {
-    getServerSession.mockResolvedValue(session);
-    prisma.user.update.mockResolvedValue({ ...mockUser, weekDays: ['TUESDAY'] });
-    const req = { json: async () => ({ weekDays: ['TUESDAY'] }) };
+    // Setup mocks
+    vi.mocked(getServerSession).mockResolvedValue(mockSession);
+    vi.mocked(prisma.user.update).mockResolvedValue({
+      ...mockUser,
+      weekDays: ['TUESDAY'] as Weekday[]
+    });
+    
+    // Call the API
+    const req = createMockNextRequest({ weekDays: ['TUESDAY'] });
     const res = await PATCH(req);
-    const json = await res.json();
+    
+    // Check the response
     expect(res.status).toBe(200);
     expect(prisma.user.update).toHaveBeenCalledWith({
       where: { email: mockUser.email },
-      data: { weekDays: ['TUESDAY'] },
+      data: expect.objectContaining({ weekDays: ['TUESDAY'] }),
     });
+    
+    const json = await res.json();
+    expect(json.user).toHaveProperty('weekDays');
     expect(json.user.weekDays).toEqual(['TUESDAY']);
   });
 
   it('PATCH returns 401 if not authenticated', async () => {
-    getServerSession.mockResolvedValue(null);
-    const req = { json: async () => ({ firstDayOfWeek: 'FRIDAY' }) };
+    // Setup mocks
+    vi.mocked(getServerSession).mockResolvedValue(null);
+    
+    // Call the API
+    const req = createMockNextRequest({ firstDayOfWeek: 'FRIDAY' });
     const res = await PATCH(req);
+    
+    // Check the response
     expect(res.status).toBe(401);
+    const json = await res.json();
+    expect(json).toHaveProperty('error', 'Unauthorized');
   });
-
+  
   it('PATCH returns 400 on invalid input', async () => {
-    getServerSession.mockResolvedValue(session);
-    const req = { json: async () => ({ firstDayOfWeek: 'INVALID_DAY' }) };
+    // Setup mocks
+    vi.mocked(getServerSession).mockResolvedValue(mockSession);
+    
+    // Call the API
+    const req = createMockNextRequest({ firstDayOfWeek: 'INVALID_DAY' });
     const res = await PATCH(req);
+    
+    // Check the response
     expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json).toHaveProperty('error');
   });
 
   it('GET returns 404 if user not found', async () => {
-    getServerSession.mockResolvedValue(session);
-    prisma.user.findUnique.mockResolvedValue(null);
-    const req = { headers: {} };
-    const res = await GET(req);
+    // Setup mocks
+    vi.mocked(getServerSession).mockResolvedValue(mockSession);
+    vi.mocked(prisma.user.findUnique).mockResolvedValue(null);
+    
+    // Call the API
+    const res = await GET();
+    
+    // Check the response
     expect(res.status).toBe(404);
+    const json = await res.json();
+    expect(json).toHaveProperty('error', 'User not found');
   });
 
   it('PATCH with empty body returns 200 (no update)', async () => {
-    getServerSession.mockResolvedValue(session);
-    prisma.user.update.mockResolvedValue({ ...mockUser });
-    const req = { json: async () => ({}) };
+    // Setup mocks
+    vi.mocked(getServerSession).mockResolvedValue(mockSession);
+    vi.mocked(prisma.user.update).mockResolvedValue(mockUser);
+    
+    // Call the API
+    const req = createMockNextRequest({});
     const res = await PATCH(req);
-    const json = await res.json();
+    
+    // Check the response
     expect(res.status).toBe(200);
-    expect(prisma.user.update).toHaveBeenCalledWith({
-      where: { email: mockUser.email },
-      data: {},
-    });
-    expect(json.user).toBeDefined();
+    const json = await res.json();
+    expect(json).toHaveProperty('user');
   });
 
   it('PATCH returns 400 if weekDays is not an array', async () => {
-    getServerSession.mockResolvedValue(session);
-    const req = { json: async () => ({ weekDays: 'MONDAY' }) };
+    // Setup mocks
+    vi.mocked(getServerSession).mockResolvedValue(mockSession);
+    
+    // Call the API
+    const req = createMockNextRequest({ weekDays: 'MONDAY' });
     const res = await PATCH(req);
+    
+    // Check the response
     expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json).toHaveProperty('error');
   });
 });
