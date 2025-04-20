@@ -106,6 +106,12 @@ const Header: React.FC = () => {
                 {session.user.name || session.user.email || "Profile"}
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+              <DropdownMenuItem asChild data-testid="settings-button">
+                <Link href="/settings" className="cursor-pointer w-full">
+                  Settings
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => signOut()}
                 data-testid="signout-button"
