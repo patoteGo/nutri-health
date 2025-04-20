@@ -21,6 +21,16 @@ const weekDays = [
   "sunday",
 ]; // Lowercase for translation keys
 
+// Backend enum for meal moments
+const mealMoments = [
+  "BREAKFAST",
+  "SNACK1",
+  "LUNCH",
+  "SNACK2",
+  "DINNER",
+  "SUPPER"
+] as const;
+
 // --- Helper: Get meal moment label from enum ---
 function getMealLabel(meal: string, t: (key: string, defaultText?: string) => string) {
   switch (meal) {
@@ -57,7 +67,7 @@ const MenuCard: React.FC<{
       ref={provided.innerRef}
       {...provided.draggableProps}
       {...provided.dragHandleProps}
-      className="mb-2 bg-white shadow rounded border hover:bg-accent/10 transition select-none"
+      className="mb-2 bg-card text-card-foreground shadow rounded border hover:bg-accent/10 transition select-none"
     >
       <Card className="p-2 flex flex-col justify-between">
         <div className="flex justify-between items-center gap-2 mb-1">
@@ -134,88 +144,62 @@ const WeeklyMealKanban: React.FC<WeeklyMealKanbanProps> = ({ menus }) => {
   // Removed unused draggedItemId state and effect
   return (
     <>
-        <div className="overflow-x-auto">
-          <div className="flex gap-2 min-w-[1200px]">
-            {/* Day columns */}
-            {weekDays.map((day) => {
-                const dayMenus = menusByDay[day] || [];
-              
-                return (
-                  <div key={day} className="flex-1 min-w-[180px]">
-                    <div className="text-center text-sm mb-2 font-normal tracking-wide bg-muted rounded-t-lg py-2 shadow-sm border-b border-muted-foreground/10">
-                      {t(`weekday_${day}`, day.charAt(0).toUpperCase() + day.slice(1))}
-                    </div>
-                  
-                  {/* Make each day a droppable area */}
-                  <Droppable droppableId={day} type="menu">
-                    {(provided, snapshot) => {
-                      // Log when a day becomes a drop target
-                      if (snapshot.isDraggingOver) {
-                        console.log(`Dragging over ${day} - isDraggingOver:`, snapshot.isDraggingOver);
-                      }
-                      
-                      return (
-                        <div 
-                          ref={provided.innerRef}
-                          {...provided.droppableProps} 
-                          data-droppable-id={day}
-                          className={`min-h-[400px] p-3 rounded border-2 transition-colors ${snapshot.isDraggingOver ? "border-primary bg-primary/5 ring-2 ring-primary" : "border-muted/30"}`}
-                          style={{ 
-                            minHeight: 400,
-                            position: 'relative'
-                          }}
-                        >
-                          {/* Show meal type headers and assigned menus */}
-                          {mealTypeOrder.map((type) => {
-                            // Find menu of this type for this day
-                            const typeMenus = dayMenus.filter(m => m.category?.toUpperCase() === type);
-                            
-                            // Only show if there's a menu of this type
-                            return typeMenus.map((menu, index) => (
-                              <div key={`${day}-${type}-${menu.id}`} className="mb-3">
-                                <div className="text-xs font-semibold mb-1 text-muted-foreground">
-                                  {getMealLabel(type, (key, defaultText) => t(key, { defaultValue: defaultText }))}
-                                </div>
-                                
-                                <Draggable draggableId={menu.id} index={index}>
-                                  {(provided, snapshot) => {
-                                    if (snapshot.isDragging) {
-                                      console.log(`Dragging menu ${menu.id} from ${day}`);
-                                    }
-                                    
-                                    return (
-                                      <MenuCard 
-                                        menu={menu} 
-                                        index={index}
-                                        provided={provided}
-                                      />
-                                    );
-                                  }}
-                                </Draggable>
-                              </div>
-                            ));
-                          })}
-                          
-                          {/* Drop placeholder */}
-                          {provided.placeholder}
-                          
-                          {/* Visual indicator when dragging over */}
-                          {snapshot.isDraggingOver && (
-                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                              <div className="text-center p-3 text-sm text-primary font-medium bg-primary/10 rounded shadow-lg border border-primary">
-                                {t('drop_to_add_to_day', 'Solte para adicionar em {{day}}', { day: t(`weekday_${day}`, day.charAt(0).toUpperCase() + day.slice(1)) })}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    }}
-                  </Droppable>
-                </div>
-              );
-            })}
+      <div className="overflow-x-auto">
+        <div className="flex gap-2 min-w-[1200px]">
+          {/* Day columns */}
+          {weekDays.map((day) => (
+            <div key={day} className="flex-1 min-w-[180px]">
+              <div className="text-center text-sm mb-2 font-normal tracking-wide bg-muted rounded-t-lg py-2 shadow-sm border-b border-muted-foreground/10">
+                {t(`weekday_${day}`, day.charAt(0).toUpperCase() + day.slice(1))}
+              </div>
+              {/* Render meal moments for each day */}
+              {/* Single big droppable for the day */}
+<Droppable droppableId={day} type="menu">
+  {(provided, snapshot) => (
+    <div
+      ref={provided.innerRef}
+      {...provided.droppableProps}
+      data-droppable-id={day}
+      className={`min-h-[400px] p-3 rounded border-2 transition-colors ${snapshot.isDraggingOver ? "border-primary bg-primary/5 ring-2 ring-primary" : "border-muted/30"}`}
+      style={{ minHeight: 400, position: "relative" }}
+    >
+      {mealMoments.map((moment) => {
+        const menu = menus.find(
+          (m) => m.assignedDay === day && m.assignedMoment === moment
+        );
+        if (!menu) return null;
+        return (
+          <div key={moment} className="mb-3">
+            <div className="text-xs font-semibold mb-1 text-muted-foreground">
+              {getMealLabel(moment, (key, defaultText) => t(key, { defaultValue: defaultText }))}
+            </div>
+            <Draggable draggableId={menu.id} index={0} key={menu.id}>
+              {(provided, snapshot) => (
+                <MenuCard
+                  menu={menu}
+                  index={0}
+                  provided={provided}
+                />
+              )}
+            </Draggable>
+          </div>
+        );
+      })}
+      {provided.placeholder}
+      {snapshot.isDraggingOver && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="text-center p-3 text-sm text-primary font-medium bg-primary/10 rounded shadow-lg border border-primary">
+            {t('drop_to_add_to_day', 'Solte para adicionar em {{day}}', { day: t(`weekday_${day}`, day.charAt(0).toUpperCase() + day.slice(1)) })}
           </div>
         </div>
+      )}
+    </div>
+  )}
+</Droppable>
+            </div>
+          ))}
+        </div>
+      </div>
     </>
   );
 };

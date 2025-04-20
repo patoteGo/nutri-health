@@ -3,11 +3,16 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import MenuBuilder from "@/components/admin/MenuBuilder";
 import { vi } from "vitest";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { DragDropContext } from '@hello-pangea/dnd';
 
 function renderWithQueryClient(ui: React.ReactElement) {
   const queryClient = new QueryClient();
   return render(
-    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      <DragDropContext onDragEnd={() => {}}>
+        {ui}
+      </DragDropContext>
+    </QueryClientProvider>
   );
 }
 

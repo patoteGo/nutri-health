@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 import { render, screen } from "@testing-library/react";
 import Header from "@/components/Header";
 import { usePathname } from "next/navigation";
@@ -25,6 +25,22 @@ vi.mock("next-auth/react", () => ({
   signIn: vi.fn(),
   signOut: vi.fn(),
 }));
+
+beforeAll(() => {
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: vi.fn().mockImplementation((query) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  });
+});
 
 describe("Header", () => {
   it("renders breadcrumb for root", () => {

@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import MenuBuilder from "@/components/admin/MenuBuilder";
 import { vi } from "vitest";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { DragDropContext } from '@hello-pangea/dnd';
 
 const mockIngredients = [
   { id: "1", name: "Brown Rice", carbs: 23, protein: 2.6, fat: 0.9, unit: "GRAM" },
@@ -26,7 +27,11 @@ function renderWithProviders(ui: React.ReactElement) {
   const queryClient = new QueryClient();
   return render(
     <I18nextProvider i18n={i18n}>
-      <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        <DragDropContext onDragEnd={() => {}}>
+          {ui}
+        </DragDropContext>
+      </QueryClientProvider>
     </I18nextProvider>
   );
 }

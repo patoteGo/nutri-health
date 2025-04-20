@@ -10,6 +10,8 @@ import type { Menu, Ingredient } from "@/lib/types";
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { z } from "zod";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import type { MealMoment } from "./__mealMomentTypes";
 
 const IngredientSchema = z.object({
   id: z.string(),
@@ -21,7 +23,8 @@ const IngredientSchema = z.object({
   unit: z.string().optional().nullable(),
 });
 
-const categories = ["Breakfast", "Lunch", "Dinner", "Snack"];
+
+
 
 interface MenuBuilderProps {
   menus: Menu[];
@@ -32,17 +35,28 @@ interface MenuBuilderProps {
 
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export default function MenuBuilder({ menus, onMenusChange, personId, parentIsDragging = false}: MenuBuilderProps) {
+function MenuBuilder({ menus, onMenusChange, personId, parentIsDragging = false}: MenuBuilderProps) {
   const { t } = useTranslation();
   const unassignedMenus = menus.filter(menu => !menu.assignedDay && !menu.assignedMoment);
   
   const [menuName, setMenuName] = useState("");
-  const [category, setCategory] = useState(categories[0]);
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [ingredientQuery, setIngredientQuery] = useState("");
   const [ingredientOptions, setIngredientOptions] = useState<z.infer<typeof IngredientSchema>[]>([]);
   const [ingredientLoading, setIngredientLoading] = useState(false);
   const [ingredientError, setIngredientError] = useState<string | null>(null);
+
+  const [mealMoments, setMealMoments] = useState<MealMoment[]>([]);
+  const [category, setCategory] = useState<string>("");
+
+  useEffect(() => {
+    fetch("/api/meal-moments")
+      .then(res => res.json())
+      .then((data: MealMoment[]) => {
+        setMealMoments(data);
+        if (data.length > 0) setCategory(data[0].name);
+      });
+  }, []);
 
   // Show ingredientError as toast if not null
   useEffect(() => {
@@ -156,7 +170,19 @@ export default function MenuBuilder({ menus, onMenusChange, personId, parentIsDr
       toast.error(t('select_person_first', 'Please select a person before adding a menu.'));
       return;
     }
-    menuMutation.mutate({ name: menuName, category, personId, ingredients });
+    // Map UI category to backend MealMoment enum
+    const categoryToMealMoment = {
+      Breakfast: "BREAKFAST",
+      Lunch: "LUNCH",
+      Dinner: "DINNER",
+      Snack: "SNACK1" // If you want Snack to be SNACK1 (adjust as needed)
+    };
+    menuMutation.mutate({
+      name: menuName,
+      category,
+      personId,
+      ingredients
+    });
   }
 
   return (
@@ -181,13 +207,14 @@ export default function MenuBuilder({ menus, onMenusChange, personId, parentIsDr
               {t('category', 'Category')}
             </label>
             <Select value={category} onValueChange={setCategory}>
+
               <SelectTrigger id="category">
                 <SelectValue placeholder={t('select_category', 'Select category')} />
               </SelectTrigger>
               <SelectContent>
-                {categories.map(cat => (
-                  <SelectItem key={cat} value={cat}>
-                    {t(`category_${cat.toLowerCase()}`, cat)}
+                {mealMoments.map(moment => (
+                  <SelectItem key={moment.name} value={moment.name}>
+                    {moment.description || moment.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -206,15 +233,20 @@ export default function MenuBuilder({ menus, onMenusChange, personId, parentIsDr
                   placeholder={t('search_ingredients', 'Search ingredients')}
                 />
                 {ingredientOptions.length > 0 && (
-                  <div className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md border max-h-60 overflow-auto">
+                  <div className="absolute z-10 mt-1 w-full bg-popover text-popover-foreground shadow-lg rounded-md border border-border max-h-60 overflow-auto">
                     {ingredientOptions.map(ing => (
                       <button
                         key={ing.id}
                         type="button"
-                        className="w-full text-left px-3 py-2 hover:bg-muted flex justify-between items-center"
+                        className={cn(
+  "w-full text-left px-3 py-2 flex justify-between items-center rounded-sm transition-colors",
+  "hover:bg-accent hover:text-accent-foreground",
+  ing.disabled ? "opacity-60 cursor-not-allowed" : ""
+) }
                         onClick={() => {
                           setSelectedIngredient(ing);
                           setIngredientQuery(ing.name);
+                          setIngredientOptions([]); // Hide dropdown after select
                         }}
                       >
                         <span>{ing.name}</span>
@@ -325,7 +357,7 @@ export default function MenuBuilder({ menus, onMenusChange, personId, parentIsDr
                         ref={provided.innerRef}
                         {...provided.draggableProps}
                         {...provided.dragHandleProps}
-                        className={`p-2 bg-white shadow border hover:bg-accent transition select-none relative ${snapshot.isDragging ? "ring-2 ring-primary" : ""}`}
+                        className={`p-2 bg-white shadow border hover:bg-accent dark:bg-accent dark:hover:bg-accent/10 transition select-none relative ${snapshot.isDragging ? "ring-2 ring-primary" : ""}`}
                         style={{
                           ...provided.draggableProps.style,
                           zIndex: snapshot.isDragging ? 100 : 'auto',
@@ -375,3 +407,5 @@ export default function MenuBuilder({ menus, onMenusChange, personId, parentIsDr
     </div>
   );
 }
+
+export default MenuBuilder;

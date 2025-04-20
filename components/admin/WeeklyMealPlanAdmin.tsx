@@ -19,14 +19,23 @@ import WeeklyMealKanban from "./WeeklyMealKanban";
 
 // Define weekDays constant for use in drag-and-drop logic
 const weekDays = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-];
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+  "sunday",
+]; // Lowercase to match Kanban
+
+const mealMoments = [
+  "BREAKFAST",
+  "SNACK1",
+  "LUNCH",
+  "SNACK2",
+  "DINNER",
+  "SUPPER"
+] as const;
 
 export default function WeeklyMealPlanAdmin() {
   const [menus, setMenus] = useState<Menu[]>([]);
@@ -67,73 +76,30 @@ export default function WeeklyMealPlanAdmin() {
     setIsDragging(false);
     setDragSource(null);
     setDragDestination(null);
-    
+
     const { destination, source, draggableId } = result;
-    
+
     // If there's no destination, do nothing
     if (!destination) {
       console.warn('PARENT: Drop failed - no destination');
       return;
     }
-    
+
     // If dropped in same place, do nothing
     if (destination.droppableId === source.droppableId && destination.index === source.index) {
       console.log('PARENT: Dropped in same location, no changes needed');
       return;
     }
-    
+
     // Find the dragged menu
     const menu = menus.find(m => m.id === draggableId);
     if (!menu) {
       console.error('PARENT: Menu not found:', draggableId);
       return;
     }
-    
-    if (!menu.category) {
-      console.error('PARENT: Menu has no category:', menu);
-      return;
-    }
-    
-    // Get the meal type
-    const mealType = menu.category.toUpperCase();
-    console.log(`PARENT: Processing drop of menu type ${mealType} to ${destination.droppableId}`);
-    
-    // If destination is a day column, check if that day already has this meal type
-    if (weekDays.includes(destination.droppableId)) {
-      const day = destination.droppableId;
-      console.log(`PARENT: Dropping into day: ${day}`);
-      
-      // Check if this day already has this meal type
-      const dayMenus = menus.filter(m => m.assignedDay === day);
-      const existingMeal = dayMenus.find(m => 
-        m.category?.toUpperCase() === mealType && m.id !== menu.id
-      );
-      
-      if (existingMeal) {
-        console.warn(`PARENT: Day ${day} already has a ${menu.category}, showing error toast`);
-        toast.error(`${day} already has a ${menu.category}`);
-        return;
-      }
-      
-      console.log(`PARENT: Updating menu ${menu.id} to be assigned to ${day} as ${mealType}`);
-      // Update the menu's assigned day
-      const newMenus = menus.map(m => {
-        if (m.id === draggableId) {
-          return {
-            ...m,
-            assignedDay: day,
-            assignedMoment: mealType
-          };
-        }
-        return m;
-      });
-      
-      console.log('PARENT: Setting new menus state');
-      setMenus(newMenus);
-    } 
-    // If destination is unassigned, remove day assignment
-    else if (destination.droppableId === 'unassigned') {
-      console.log(`PARENT: Moving menu ${menu.id} to unassigned`);
+
+    // If dropped in unassigned zone
+    if (destination.droppableId === 'unassigned') {
       const newMenus = menus.map(m => {
         if (m.id === draggableId) {
           const rest = { ...m };
@@ -143,13 +109,52 @@ export default function WeeklyMealPlanAdmin() {
         }
         return m;
       });
-      
-      console.log('PARENT: Setting new menus state');
       setMenus(newMenus);
-    } else {
-      console.warn(`PARENT: Unknown drop destination: ${destination.droppableId}`);
+      return;
     }
+
+    // Otherwise, destination.droppableId is the day
+    const day = destination.droppableId;
+    // Use menu's own meal moment (assignedMoment or category mapped to backend enum)
+    let mealMoment = menu.assignedMoment;
+    if (!mealMoment && menu.category) {
+      // Map UI category to backend enum if needed
+      const categoryToMealMoment: Record<string, string> = {
+        breakfast: "BREAKFAST",
+        snack1: "SNACK1",
+        lunch: "LUNCH",
+        snack2: "SNACK2",
+        dinner: "DINNER",
+        supper: "SUPPER"
+      };
+      mealMoment = categoryToMealMoment[menu.category.toLowerCase()] || menu.category.toUpperCase();
+    }
+    if (!mealMoment) {
+      toast.error('Menu does not have a meal moment/category');
+      return;
+    }
+    // Prevent duplicate meal moment per day
+    const existingMeal = menus.find(
+      m => m.assignedDay === day && m.assignedMoment === mealMoment && m.id !== menu.id
+    );
+    if (existingMeal) {
+      toast.error(`${day.charAt(0).toUpperCase() + day.slice(1)} already has a menu for ${mealMoment}`);
+      return;
+    }
+    // Update the menu's assigned day and moment
+    const newMenus = menus.map(m => {
+      if (m.id === draggableId) {
+        return {
+          ...m,
+          assignedDay: day,
+          assignedMoment: mealMoment,
+        };
+      }
+      return m;
+    });
+    setMenus(newMenus);
   };
+
   const queryClient = useQueryClient();
 
   // Fetch people (users)

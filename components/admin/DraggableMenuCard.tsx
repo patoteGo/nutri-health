@@ -61,9 +61,9 @@ const DraggableMenuCard: React.FC<DraggableMenuCardProps> = React.memo(({ menu, 
           maxWidth: isDragging ? 400 : undefined,
         }}
         className={
-          "p-2 bg-white shadow border hover:bg-accent transition select-none relative flex-1" +
-          (isDragging ? " ring-2 ring-primary" : "")
-        }
+           "p-2 bg-card text-card-foreground shadow border hover:bg-accent transition select-none relative flex-1" +
+           (isDragging ? " ring-2 ring-primary" : "")
+         }
       >
         <div className="flex justify-between items-center gap-2 mb-1">
           <span className="font-medium">{menu.name}</span>
