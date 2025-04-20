@@ -2,6 +2,16 @@
 // Models: User (with isAdmin), Meal, WeeklyMealPlan
 // Postgres database
 
+enum Weekday {
+  SUNDAY
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+}
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -17,9 +27,15 @@ model User {
   name      String?
   picture   String?  // URL to Google profile picture
   isAdmin   Boolean  @default(false)
+  gender    String?
+  bornDate  DateTime?
+  /// First day of the week for this user (e.g., MONDAY)
+  firstDayOfWeek Weekday @default(MONDAY)
+  /// Days of the week the user will do the diet
+  dietDays Weekday[]
   meals     Meal[]
   weeklyPlans WeeklyMealPlan[]
-  healthInfo UserHealthInfo?
+  healthInfo UserHealthInfo[]
 }
 
 model UserHealthInfo {
@@ -68,6 +84,7 @@ model MealMoment {
 model WeeklyMealPlan {
   id        String   @id @default(uuid())
   user      User     @relation(fields: [userId], references: [id])
+  name      String
   userId    String
   weekStart DateTime // Monday of the week
   meals     Json     // { [day: string]: { [moment: string]: MealData } }

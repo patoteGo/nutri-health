@@ -58,6 +58,36 @@ App will be available at [http://localhost:3000](http://localhost:3000)
 
 ---
 
+## Creating New Migrations & Seeds
+
+### Create a New Migration
+
+If you make changes to your Prisma schema (e.g., add tables, fields, or relations), create a new migration with:
+
+```sh
+pnpm exec prisma migrate dev --name <migration-name>
+```
+
+Replace `<migration-name>` with a short, descriptive name (e.g., add-user-profile).
+
+This will:
+- Generate a new migration file in `prisma/migrations/`
+- Apply the migration to your local database
+
+### Update or Create a Seed Script
+
+Edit the `prisma/seed.ts` file to customize your seed data. To run the seed script:
+
+```sh
+pnpm seed
+```
+
+This command executes the script defined in your `package.json` under the `seed` script (by default, it runs `prisma db seed`).
+
+If you add new tables or relationships, update the seed script to include relevant data.
+
+---
+
 ## Admin Access
 
 - Use Google OAuth to sign in.
