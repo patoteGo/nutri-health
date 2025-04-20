@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import ThemeToggle from "./ThemeToggle";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { Button } from "@/components/ui/button";
 import { signIn, signOut, useSession } from "next-auth/react"; // For authentication actions
@@ -65,6 +66,7 @@ const Header: React.FC = () => {
       </Breadcrumb>
       {/* Language Switcher and Login Button aligned right */}
       <div className="flex justify-end items-center gap-2">
+        <ThemeToggle />
         <LanguageSwitcher />
         {/* Show Login button if not authenticated */}
         {status === "unauthenticated" && (
