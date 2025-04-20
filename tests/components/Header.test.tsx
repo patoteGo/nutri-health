@@ -1,8 +1,11 @@
+// Must import React at the very top to ensure it's defined globally
 import React from 'react';
 import { render, screen } from "@testing-library/react";
 import Header from "@/components/Header";
 import { usePathname } from "next/navigation";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi, beforeAll } from "vitest";
+import '@testing-library/jest-dom';
+global.React = React; // Explicitly make React global to avoid 'React is not defined' errors
 
 vi.mock("next/navigation", () => ({
   usePathname: vi.fn(),

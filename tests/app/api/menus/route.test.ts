@@ -9,6 +9,9 @@ vi.mock('../../../../lib/prisma', () => ({
       create: vi.fn(),
       delete: vi.fn(),
     },
+    mealMoment: {
+      findUnique: vi.fn(),
+    },
   },
 }));
 import { prisma } from '../../../../lib/prisma';
@@ -18,6 +21,7 @@ describe('/api/menus route handlers', () => {
 
   describe('POST', () => {
     it('creates a menu (happy path)', async () => {
+      prisma.mealMoment.findUnique.mockResolvedValue({ id: 'breakfast-id', name: 'Breakfast' });
       prisma.meal.create.mockResolvedValue({ id: 'menu1', parts: [{ id: 'ing1', name: 'Egg', weight: 50 }] });
       const req = { json: async () => ({
         name: 'Menu1', category: 'Breakfast', personId: 'user1', ingredients: [{ id: 'ing1', name: 'Egg', weight: 50, carbs: 1, protein: 2, fat: 3 }]

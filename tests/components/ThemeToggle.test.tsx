@@ -1,5 +1,9 @@
+// Must import React at the very top to ensure it's defined globally
 import React from 'react';
 import { render, fireEvent, screen } from '@testing-library/react';
+import { vi, beforeAll, beforeEach, afterEach, describe, it, expect } from 'vitest';
+import '@testing-library/jest-dom';
+global.React = React; // Explicitly make React global to avoid 'React is not defined' errors
 import ThemeToggle from '@/components/ThemeToggle';
 
 // Helper to reset the theme before each test

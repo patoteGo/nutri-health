@@ -1,6 +1,8 @@
+// Must import React at the very top to ensure it's defined globally
 import React from "react";
 import { render, screen, within, fireEvent } from "@testing-library/react";
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, beforeAll } from 'vitest';
+global.React = React; // Explicitly make React global to avoid 'React is not defined' errors
 import userEvent from "@testing-library/user-event";
 import LogMealPage from "@/app/log-meal/page";
 import Header from "@/components/Header";

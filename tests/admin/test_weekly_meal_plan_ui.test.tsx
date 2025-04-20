@@ -16,6 +16,8 @@ describe('WeeklyMealPlanAdmin UI', () => {
       </QueryClientProvider>
     );
     expect(screen.getByText(/Admin: Weekly Meal Plan/)).toBeInTheDocument();
-    expect(screen.getByText(/Save/)).toBeInTheDocument();
+    // Use queryAllByText since there are multiple elements with 'Save' text
+    const saveElements = screen.queryAllByText(/Save/);
+    expect(saveElements.length).toBeGreaterThan(0);
   });
 });

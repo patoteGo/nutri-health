@@ -1,7 +1,10 @@
 /// <reference types="vitest" />
+// Must import React at the very top to ensure it's defined globally
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, beforeAll } from 'vitest';
+import '@testing-library/jest-dom';
+global.React = React; // Explicitly make React global to avoid 'React is not defined' errors
 import Home from '../../app/page';
 import i18n from '../../i18n';
 import { I18nextProvider } from 'react-i18next';

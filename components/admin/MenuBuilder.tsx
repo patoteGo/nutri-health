@@ -50,11 +50,16 @@ function MenuBuilder({ menus, onMenusChange, personId, parentIsDragging = false}
   const [category, setCategory] = useState<string>("");
 
   useEffect(() => {
-    fetch("/api/meal-moments")
+    // Use absolute URL to make it work in tests
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+    fetch(`${baseUrl}/api/meal-moments`)
       .then(res => res.json())
       .then((data: MealMoment[]) => {
         setMealMoments(data);
         if (data.length > 0) setCategory(data[0].name);
+      })
+      .catch(err => {
+        console.error('Failed to fetch meal moments:', err);
       });
   }, []);
 
@@ -70,7 +75,8 @@ function MenuBuilder({ menus, onMenusChange, personId, parentIsDragging = false}
 
   // Fetch ingredients as user types
   useEffect(() => {
-    if (!ingredientQuery) {
+    // Don't search if there's already a selected ingredient or no query
+    if (!ingredientQuery || selectedIngredient) {
       setIngredientOptions([]);
       return;
     }
@@ -86,7 +92,7 @@ function MenuBuilder({ menus, onMenusChange, personId, parentIsDragging = false}
       })
       .catch((e) => setIngredientError(e.message))
       .finally(() => setIngredientLoading(false));
-  }, [ingredientQuery]);
+  }, [ingredientQuery, selectedIngredient]);
 
   const isDuplicate = Boolean(selectedIngredient && ingredients.some(ing => ing.id === selectedIngredient.id));
 
@@ -240,7 +246,9 @@ function MenuBuilder({ menus, onMenusChange, personId, parentIsDragging = false}
                         onClick={() => {
                           setSelectedIngredient(ing);
                           setIngredientQuery(ing.name);
-                          setIngredientOptions([]); // Hide dropdown after select
+                          setIngredientOptions([]);
+                          // Move focus to the weight input field
+                          (document.querySelector('input[type="number"]') as HTMLInputElement | null)?.focus();
                         }}
                       >
                         <span>{ing.name}</span>
