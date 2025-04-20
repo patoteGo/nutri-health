@@ -208,39 +208,91 @@ export default function SettingsPage() {
             {/* Week Days Selection */}
             <div>
               <div className="mb-2 font-medium">{t('week_days')}</div>
-              <div className="flex gap-2">
-                <ToggleGroup
-                  type="multiple"
-                  value={weekDays}
-                  onValueChange={setWeekDays}
-                  className="flex gap-2 flex-wrap"
-                  data-testid="week-days-toggle-group"
-                >
-                  {days.map(day => (
-                    <ToggleGroupItem
-                      key={day.value}
-                      value={day.value}
-                      aria-label={t(`weekday_${day.value}`)}
-                      data-testid={`week-day-toggle-${day.value}`}
-                    >
-                      {t(`weekday_${day.value}`).slice(0, 3)}
-                    </ToggleGroupItem>
-                  ))}
-                </ToggleGroup>
-                <button
-                  className="btn btn-primary btn-sm ml-4"
-                  onClick={handleSaveWeekDays}
-                  disabled={saving}
-                  data-testid="save-week-days"
-                >
-                  {t('save')}
-                </button>
-              </div>
-              <div className="text-muted-foreground mt-1 text-sm">
-                {t('selected')}: {weekDays.map(d => t(`weekday_${d}`)).join(", ")}
-              </div>
-              <div className="text-muted-foreground text-xs mt-1">
-                {t('week_days_desc', 'Select which days are included in your week.')}
+              <div className="space-y-6 max-w-md">
+                {/* Reorder days array to start with first day of week */}
+                {(() => {
+                  const firstDayIndex = days.findIndex(d => d.value === firstDay);
+                  const orderedDays = [...days.slice(firstDayIndex), ...days.slice(0, firstDayIndex)];
+                  return (
+                    <div className="flex justify-between px-1">
+                      {orderedDays.map((day) => (
+                        <div 
+                          key={day.value} 
+                          className={`text-xs font-medium ${weekDays.includes(day.value) ? 'text-primary' : 'text-muted-foreground'}`}
+                        >
+                          {t(`weekday_${day.value}`).slice(0, 3)}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+                <div className="pt-8 relative">
+                  {/* Day markers - reordered to match first day of week */}
+                  {(() => {
+                    const firstDayIndex = days.findIndex(d => d.value === firstDay);
+                    const orderedDays = [...days.slice(firstDayIndex), ...days.slice(0, firstDayIndex)];
+                    return (
+                      <div className="flex justify-between w-full absolute top-0">
+                        {orderedDays.map((day) => (
+                          <div 
+                            key={`marker-${day.value}`}
+                            className={`h-4 w-1 ${weekDays.includes(day.value) ? 'bg-primary' : 'bg-muted'}`}
+                          />
+                        ))}
+                      </div>
+                    );
+                  })()}
+                  
+                  {/* Single slider for number of days */}
+                  <Slider
+                    value={[weekDays.length]}
+                    min={1}
+                    max={7}
+                    step={1}
+                    onValueChange={(values) => {
+                      const numDays = values[0];
+                      // Always start with first day of week setting and add consecutive days
+                      const firstDayIndex = days.findIndex(d => d.value === firstDay);
+                      const newWeekDays = [];
+                      
+                      for (let i = 0; i < numDays; i++) {
+                        const dayIndex = (firstDayIndex + i) % 7;
+                        newWeekDays.push(days[dayIndex].value);
+                      }
+                      
+                      setWeekDays(newWeekDays);
+                    }}
+                    className="my-4"
+                    data-testid="week-days-slider"
+                  />
+                  
+                  {/* Number display with first day info */}
+                  <div className="text-center mt-2">
+                    <div className="font-medium text-lg">
+                      {weekDays.length} {weekDays.length === 1 ? t('day') : t('days')}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {t('starting_from')} {t(`weekday_${firstDay}`)}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div className="text-muted-foreground text-sm">
+                    {t('selected')}: {weekDays.map(d => t(`weekday_${d}`)).join(", ")}
+                  </div>
+                  <button
+                    className="btn btn-primary btn-sm"
+                    onClick={handleSaveWeekDays}
+                    disabled={saving}
+                    data-testid="save-week-days"
+                  >
+                    {t('save')}
+                  </button>
+                </div>
+                <div className="text-muted-foreground text-xs">
+                  {t('week_days_desc', 'Select how many days are included in your week.')}
+                </div>
               </div>
             </div>
           </div>
