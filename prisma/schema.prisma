@@ -52,17 +52,17 @@ model Meal {
   user        User     @relation(fields: [userId], references: [id])
   userId      String
   date        DateTime
-  moment      MealMoment
+  mealMoment   MealMoment   @relation(fields: [mealMomentId], references: [id])
+  mealMomentId Int
   parts       Json     // Array of meal parts: [{ name, grams, imageUrl }]
 }
 
-enum MealMoment {
-  BREAKFAST
-  SNACK1
-  LUNCH
-  SNACK2
-  DINNER
-  SUPPER
+model MealMoment {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  timeInDay   String   // e.g., "08:00" or "Morning"
+  description String?
+  meals       Meal[]   // Relation to Meal
 }
 
 model WeeklyMealPlan {

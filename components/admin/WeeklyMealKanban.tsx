@@ -174,7 +174,7 @@ const WeeklyMealKanban: React.FC<WeeklyMealKanbanProps> = ({ menus }) => {
                             return typeMenus.map((menu, index) => (
                               <div key={`${day}-${type}-${menu.id}`} className="mb-3">
                                 <div className="text-xs font-semibold mb-1 text-muted-foreground">
-                                  {getMealLabel(type, t)}
+                                  {getMealLabel(type, (key, defaultText) => t(key, { defaultValue: defaultText }))}
                                 </div>
                                 
                                 <Draggable draggableId={menu.id} index={index}>

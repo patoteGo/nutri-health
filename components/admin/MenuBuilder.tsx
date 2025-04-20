@@ -30,7 +30,9 @@ interface MenuBuilderProps {
   parentIsDragging?: boolean;
 }
 
-export default function MenuBuilder({ menus, onMenusChange, personId, parentIsDragging = false }: MenuBuilderProps) {
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export default function MenuBuilder({ menus, onMenusChange, personId, parentIsDragging = false}: MenuBuilderProps) {
   const { t } = useTranslation();
   const unassignedMenus = menus.filter(menu => !menu.assignedDay && !menu.assignedMoment);
   

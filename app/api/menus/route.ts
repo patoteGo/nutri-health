@@ -1,7 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
-import { MealMoment } from '@prisma/client';
+
+// Allowed meal moments (should match your enum or DB values)
+const ALLOWED_MEAL_MOMENTS = [
+  "BREAKFAST",
+  "SNACK1",
+  "LUNCH",
+  "SNACK2",
+  "DINNER",
+  "SUPPER"
+];
 
 const IngredientSchema = z.object({
   id: z.string(),
@@ -30,14 +39,19 @@ export async function POST(req: NextRequest) {
     }
     const { name, category, personId, ingredients } = parsed.data;
     const upperCategory = category.toUpperCase();
-    if (!(upperCategory in MealMoment)) {
+    if (!ALLOWED_MEAL_MOMENTS.includes(upperCategory)) {
       return NextResponse.json({ error: `Invalid meal moment: ${category}` }, { status: 400 });
+    }
+    // Lookup MealMoment by name
+    const mealMoment = await prisma.mealMoment.findUnique({ where: { name: upperCategory } });
+    if (!mealMoment) {
+      return NextResponse.json({ error: `MealMoment not found: ${category}` }, { status: 400 });
     }
     const menu = await prisma.meal.create({
       data: {
         userId: personId,
         date: new Date(), // or pass from client
-        moment: upperCategory as MealMoment,
+        mealMomentId: mealMoment.id,
         parts: ingredients.map(ing => ({
           id: ing.id,
           name: ing.name,
