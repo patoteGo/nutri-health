@@ -1,3 +1,5 @@
+import { vi } from 'vitest';
+
 // # Reason: Polyfill for PointerEvent API missing in JSDOM (used by Vitest/Testing Library)
 // Needed for Radix UI components that use pointer events.
 if (typeof Element.prototype.hasPointerCapture === 'undefined') {

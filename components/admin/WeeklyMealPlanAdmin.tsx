@@ -18,6 +18,7 @@ import WeeklyMealKanban from "./WeeklyMealKanban";
 
 
 // Define weekDays constant for use in drag-and-drop logic
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const weekDays = [
   "monday",
   "tuesday",
@@ -28,6 +29,7 @@ const weekDays = [
   "sunday",
 ]; // Lowercase to match Kanban
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const mealMoments = [
   "BREAKFAST",
   "SNACK1",

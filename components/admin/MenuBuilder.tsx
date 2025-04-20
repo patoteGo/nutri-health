@@ -140,7 +140,7 @@ function MenuBuilder({ menus, onMenusChange, personId, parentIsDragging = false}
       // Use the real menu object returned from the backend (with DB id)
       onMenusChange([...menus, menu]);
       setMenuName("");
-      setCategory(categories[0]);
+      setCategory(mealMoments.length > 0 ? mealMoments[0].name : "");
       setIngredients([]);
       queryClient.invalidateQueries({ queryKey: ['menus'] });
       toast.success(t('menu_saved_success', 'Menu saved successfully!'));
@@ -171,12 +171,7 @@ function MenuBuilder({ menus, onMenusChange, personId, parentIsDragging = false}
       return;
     }
     // Map UI category to backend MealMoment enum
-    const categoryToMealMoment = {
-      Breakfast: "BREAKFAST",
-      Lunch: "LUNCH",
-      Dinner: "DINNER",
-      Snack: "SNACK1" // If you want Snack to be SNACK1 (adjust as needed)
-    };
+
     menuMutation.mutate({
       name: menuName,
       category,
@@ -240,8 +235,7 @@ function MenuBuilder({ menus, onMenusChange, personId, parentIsDragging = false}
                         type="button"
                         className={cn(
   "w-full text-left px-3 py-2 flex justify-between items-center rounded-sm transition-colors",
-  "hover:bg-accent hover:text-accent-foreground",
-  ing.disabled ? "opacity-60 cursor-not-allowed" : ""
+  "hover:bg-accent hover:text-accent-foreground"
 ) }
                         onClick={() => {
                           setSelectedIngredient(ing);

@@ -52,6 +52,7 @@ function getMealLabel(meal: string, t: (key: string, defaultText?: string) => st
 }
 
 // --- Main Kanban Component ---
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const mealTypeOrder = ["BREAKFAST", "LUNCH", "DINNER", "SNACK"];
 
 // Removed unused MealType type
@@ -101,6 +102,7 @@ const WeeklyMealKanban: React.FC<WeeklyMealKanbanProps> = ({ menus }) => {
   console.log(`WeeklyMealKanban render #${renderCount.current}`);
 
   // Organize menus: unassigned and assigned by day
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const menusByDay = React.useMemo(() => {
     console.log('Organizing menus by day:', menus);
     const result: Record<string, Menu[]> = {
@@ -174,6 +176,7 @@ const WeeklyMealKanban: React.FC<WeeklyMealKanbanProps> = ({ menus }) => {
               {getMealLabel(moment, (key, defaultText) => t(key, { defaultValue: defaultText }))}
             </div>
             <Draggable draggableId={menu.id} index={0} key={menu.id}>
+              {/* eslint-disable-next-line @typescript-eslint/no-unused-vars */}
               {(provided, snapshot) => (
                 <MenuCard
                   menu={menu}
