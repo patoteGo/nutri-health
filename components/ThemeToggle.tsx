@@ -27,15 +27,16 @@ function getPreferredTheme(): "dark" | "light" {
 }
 
 export default function ThemeToggle() {
-  const [theme, setThemeState] = useState<"dark" | "light">(() => getPreferredTheme());
-  // On mount, sync theme from localStorage or system
+  const [mounted, setMounted] = useState(false);
+  const [theme, setThemeState] = useState<"dark" | "light">("light");
+
   useEffect(() => {
+    setMounted(true);
     const t = getPreferredTheme();
     setThemeState(t);
     document.documentElement.classList.toggle("dark", t === "dark");
   }, []);
 
-  // Update theme and persist to localStorage
   function toggleTheme() {
     setThemeState((curr) => {
       const next = curr === "dark" ? "light" : "dark";
@@ -44,6 +45,8 @@ export default function ThemeToggle() {
       return next;
     });
   }
+
+  if (!mounted) return null;
 
   return (
     <button

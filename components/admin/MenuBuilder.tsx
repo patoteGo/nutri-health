@@ -162,7 +162,7 @@ export default function MenuBuilder({ menus, onMenusChange, personId, parentIsDr
   return (
     <div className="grid lg:grid-cols-2 gap-6">
       {/* First column - Menu building form */}
-      <div className="rounded-lg border p-4 bg-white shadow-sm">
+      <div className="rounded-lg border border-border p-4 bg-card text-card-foreground shadow-sm">
         <h3 className="font-medium mb-2">{t('new_menu', 'New Menu')}</h3>
         <div className="space-y-4">
           <div>
