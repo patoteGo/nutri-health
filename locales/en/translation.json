@@ -29,6 +29,8 @@
   "day": "day",
   "days": "days",
   "days_in_week_desc": "These are the days you are committed to your diet.",
+  "week_days": "Week Days",
+  "week_days_desc": "Select which days are included in your week.",
   "user_settings": "User Settings",
   "user_settings_desc": "Manage your personal information and preferences.",
   "born_date": "Born date",

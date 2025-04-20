@@ -1,17 +1,36 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSession } from "next-auth/react";
-
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { z } from "zod";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Slider } from "@/components/ui/slider";
 import { useState } from "react";
 import ReactDatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+
+// Zod schema for settings PATCH
+const WeekdayEnum = z.enum([
+  "sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"
+]);
+const SettingsSchema = z.object({
+  firstDayOfWeek: WeekdayEnum.optional(),
+  weekDays: z.array(WeekdayEnum).optional(),
+  birthDate: z.string().optional(),
+  weight: z.number().optional(), // Now supports weight
+});
+
+// Helper to map UI <-> backend enum casing
+const toBackendDay = (d: string) => d.toUpperCase();
+const fromBackendDay = (d: string) => d.toLowerCase();
+const toBackendDays = (arr: string[]) => arr.map(toBackendDay);
+const fromBackendDays = (arr: string[]) => arr.map(fromBackendDay);
+
 
 // Helper to calculate age from date string (YYYY-MM-DD)
 function calculateAge(dateString: string): number {
@@ -28,17 +47,80 @@ function calculateAge(dateString: string): number {
 export default function SettingsPage() {
   const { t } = useTranslation();
   const { data: session } = useSession();
+  const queryClient = useQueryClient();
 
-  // General settings state
+  // Settings state
   const [firstDay, setFirstDay] = useState<string>("monday");
-  const [daysInWeek, setDaysInWeek] = useState<number>(7);
-
-  // User settings state
+  const [weekDays, setWeekDays] = useState<string[]>(["monday","tuesday","wednesday","thursday","friday","saturday","sunday"]);
   const [bornDate, setBornDate] = useState<string>("");
+  // Local-only state for UI fields not yet connected to backend
   const [weight, setWeight] = useState<number | undefined>(undefined);
+  const [weightSaving, setWeightSaving] = useState(false);
   const [height, setHeight] = useState<number | undefined>(undefined);
   const [gender, setGender] = useState<string>("");
+  // UI state for PATCH loading
+  const [saving, setSaving] = useState(false);
 
+  // Fetch user settings from backend
+  const { data: settings, isLoading, isError } = useQuery({
+    queryKey: ["user-settings"],
+    queryFn: async () => {
+      const res = await fetch("/api/user/settings");
+      if (!res.ok) throw new Error("Failed to fetch settings");
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      if (data.firstDayOfWeek) setFirstDay(fromBackendDay(data.firstDayOfWeek));
+      if (Array.isArray(data.weekDays)) setWeekDays(fromBackendDays(data.weekDays));
+      if (data.birthDate) setBornDate(data.birthDate.split("T")[0]);
+      if (typeof data.weight === 'number') setWeight(data.weight);
+    },
+  });
+
+  // PATCH mutation for partial update
+  const mutation = useMutation({
+    mutationFn: async (payload: Partial<{ firstDayOfWeek: string; weekDays: string[]; birthDate: string; weight: number }>) => {
+      // Validate with zod
+      const parsed = SettingsSchema.partial().safeParse(payload);
+      if (!parsed.success) throw new Error("Invalid input");
+      const res = await fetch("/api/user/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...(payload.firstDayOfWeek && { firstDayOfWeek: toBackendDay(payload.firstDayOfWeek) }),
+          ...(payload.weekDays && { weekDays: toBackendDays(payload.weekDays) }),
+          ...(payload.birthDate && { birthDate: payload.birthDate }),
+          ...(typeof payload.weight === 'number' && { weight: payload.weight }),
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to update settings");
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["user-settings"] });
+      toast.success(t("settings_saved", "Settings saved successfully!"));
+    },
+    onError: (err: any) => {
+      toast.error(t("settings_save_error", "Failed to save settings") + (err?.message ? `: ${err.message}` : ""));
+    },
+    onSettled: () => setSaving(false),
+  });
+
+  // UI handlers for PATCH
+  const handleSaveFirstDay = () => {
+    setSaving(true);
+    mutation.mutate({ firstDayOfWeek: firstDay });
+  };
+  const handleSaveWeekDays = () => {
+    setSaving(true);
+    mutation.mutate({ weekDays });
+  };
+  const handleSaveBirthDate = () => {
+    setSaving(true);
+    mutation.mutate({ birthDate: bornDate });
+  };
+
+  // Weekday options for UI
   const days = [
     { value: "sunday", label: "Sunday" },
     { value: "monday", label: "Monday" },
@@ -49,11 +131,28 @@ export default function SettingsPage() {
     { value: "saturday", label: "Saturday" },
   ];
 
+  // Weekday toggle logic
+  const toggleWeekDay = (day: string) => {
+    setWeekDays((prev) =>
+      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
+    );
+  };
+
+  // Loading and error states
+  if (isLoading) { 
+    return <div className="p-8 text-center">{t('loading')}</div>; 
+  }
+
+  if (isError) { 
+    return <div className="p-8 text-center text-red-500">{t('settings_load_error', 'Failed to load settings')}</div>; 
+  }
+
+  // Main content
   return (
     <div className="container mx-auto py-8 max-w-4xl">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold">{t('settings_title')}</h1>
-        <LanguageSwitcher />
+
       </div>
 
       {/* General Settings Card */}
@@ -69,25 +168,35 @@ export default function SettingsPage() {
             {/* First Day of the Week */}
             <div>
               <div className="mb-2 font-medium">{t('first_day_of_week')}</div>
-              <ToggleGroup
-                type="single"
-                value={firstDay}
-                onValueChange={val => val && setFirstDay(val)}
-                className="flex gap-2"
-                data-testid="first-day-toggle-group"
-              >
-                {days.map(day => (
-                  <ToggleGroupItem
-                    key={day.value}
-                    value={day.value}
-                    aria-label={t(`weekday_${day.value}`)}
-                    data-testid={`first-day-toggle-${day.value}`}
-                    className="capitalize"
-                  >
-                    {t(`weekday_${day.value}`).slice(0, 3)}
-                  </ToggleGroupItem>
-                ))}
-              </ToggleGroup>
+              <div className="flex items-center gap-2">
+                <ToggleGroup
+                  type="single"
+                  value={firstDay}
+                  onValueChange={val => val && setFirstDay(val)}
+                  className="flex gap-2"
+                  data-testid="first-day-toggle-group"
+                >
+                  {days.map(day => (
+                    <ToggleGroupItem
+                      key={day.value}
+                      value={day.value}
+                      aria-label={t(`weekday_${day.value}`)}
+                      data-testid={`first-day-toggle-${day.value}`}
+                      className="capitalize"
+                    >
+                      {t(`weekday_${day.value}`).slice(0, 3)}
+                    </ToggleGroupItem>
+                  ))}
+                </ToggleGroup>
+                <button
+                  className="btn btn-primary btn-sm ml-4"
+                  onClick={handleSaveFirstDay}
+                  disabled={saving}
+                  data-testid="save-first-day"
+                >
+                  {t('save')}
+                </button>
+              </div>
               <div className="text-muted-foreground mt-1 text-sm">
                 {t('selected')}: {t(`weekday_${firstDay}`)}
               </div>
@@ -96,25 +205,42 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            {/* Days in a Week */}
+            {/* Week Days Selection */}
             <div>
-              <div className="mb-2 font-medium">{t('days_in_week')}</div>
-              <div data-testid="days-in-week-slider" className="flex items-center gap-4">
-                <Slider
-                  min={1}
-                  max={7}
-                  step={1}
-                  value={[daysInWeek]}
-                  onValueChange={([val]) => setDaysInWeek(val)}
-                  className="w-48"
-                  aria-label={t('days_in_week')}
-                />
-                <span className="text-muted-foreground">
-                  {daysInWeek} {daysInWeek === 1 ? t('day') : t('days')}
-                </span>
+              <div className="mb-2 font-medium">{t('week_days')}</div>
+              <div className="flex gap-2">
+                <ToggleGroup
+                  type="multiple"
+                  value={weekDays}
+                  onValueChange={setWeekDays}
+                  className="flex gap-2 flex-wrap"
+                  data-testid="week-days-toggle-group"
+                >
+                  {days.map(day => (
+                    <ToggleGroupItem
+                      key={day.value}
+                      value={day.value}
+                      aria-label={t(`weekday_${day.value}`)}
+                      data-testid={`week-day-toggle-${day.value}`}
+                    >
+                      {t(`weekday_${day.value}`).slice(0, 3)}
+                    </ToggleGroupItem>
+                  ))}
+                </ToggleGroup>
+                <button
+                  className="btn btn-primary btn-sm ml-4"
+                  onClick={handleSaveWeekDays}
+                  disabled={saving}
+                  data-testid="save-week-days"
+                >
+                  {t('save')}
+                </button>
+              </div>
+              <div className="text-muted-foreground mt-1 text-sm">
+                {t('selected')}: {weekDays.map(d => t(`weekday_${d}`)).join(", ")}
               </div>
               <div className="text-muted-foreground text-xs mt-1">
-                {t('days_in_week_desc')}
+                {t('week_days_desc', 'Select which days are included in your week.')}
               </div>
             </div>
           </div>
@@ -131,7 +257,7 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-col space-y-8">
-            {/* Born date and age */}
+            {/* Birth date and age */}
             <div>
               <label htmlFor="born-date" className="block font-medium mb-1">{t('born_date')}</label>
               <div className="flex items-center gap-4">
@@ -157,6 +283,14 @@ export default function SettingsPage() {
                   data-testid="born-date-input"
                   isClearable
                 />
+                <button
+                  className="btn btn-primary btn-sm ml-4"
+                  onClick={handleSaveBirthDate}
+                  disabled={saving || !bornDate}
+                  data-testid="save-birth-date"
+                >
+                  {t('save')}
+                </button>
                 <span className="text-muted-foreground text-sm" data-testid="age-value">
                   {t('age')}: {bornDate ? calculateAge(bornDate) : '--'}
                 </span>
@@ -166,23 +300,49 @@ export default function SettingsPage() {
             {/* Current weight */}
             <div>
               <label htmlFor="current-weight" className="block font-medium mb-1">{t('current_weight_kg')}</label>
-              <Select
-                value={weight ? String(weight) : ""}
-                onValueChange={val => setWeight(Number(val))}
-                data-testid="weight-input"
-              >
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder={t('select_weight')} />
-                </SelectTrigger>
-                <SelectContent>
-                  {[...Array(171)].map((_, i) => {
-                    const val = i + 30;
-                    return (
-                      <SelectItem key={val} value={String(val)}>{val} {t('kg')}</SelectItem>
+              <div className="flex items-center gap-4">
+                <Select
+                  value={weight ? String(weight) : ""}
+                  onValueChange={val => setWeight(Number(val))}
+                  data-testid="weight-input"
+                  disabled={weightSaving || saving}
+                >
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder={t('select_weight')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[...Array(171)].map((_, i) => {
+                      const val = i + 30;
+                      return (
+                        <SelectItem key={val} value={String(val)}>{val} {t('kg')}</SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+                <button
+                  className="btn btn-primary btn-sm"
+                  onClick={async () => {
+                    if (typeof weight !== 'number') return;
+                    setWeightSaving(true);
+                    mutation.mutate(
+                      { weight },
+                      {
+                        onSuccess: () => {
+                          toast.success(t("settings_saved", "Settings saved successfully!"));
+                        },
+                        onError: (err: any) => {
+                          toast.error(t("settings_save_error", "Failed to save settings") + (err?.message ? `: ${err.message}` : ""));
+                        },
+                        onSettled: () => setWeightSaving(false),
+                      }
                     );
-                  })}
-                </SelectContent>
-              </Select>
+                  }}
+                  disabled={weightSaving || saving || typeof weight !== 'number'}
+                  data-testid="save-weight"
+                >
+                  {weightSaving ? t('saving', 'Saving...') : t('save')}
+                </button>
+              </div>
             </div>
 
             {/* Height in cm */}
@@ -238,7 +398,6 @@ export default function SettingsPage() {
           )}
         </CardContent>
       </Card>
-
     </div>
   );
 }
