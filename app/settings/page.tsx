@@ -62,20 +62,24 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
 
   // Fetch user settings from backend
-  const { data: settings, isLoading, isError } = useQuery({
+  const { isLoading, isError, data } = useQuery({
     queryKey: ["user-settings"],
     queryFn: async () => {
       const res = await fetch("/api/user/settings");
       if (!res.ok) throw new Error("Failed to fetch settings");
       return await res.json();
     },
-    onSuccess: (data) => {
+  });
+  
+  // Handle successful data fetching
+  useEffect(() => {
+    if (data) {
       if (data.firstDayOfWeek) setFirstDay(fromBackendDay(data.firstDayOfWeek));
       if (Array.isArray(data.weekDays)) setWeekDays(fromBackendDays(data.weekDays));
       if (data.birthDate) setBornDate(data.birthDate.split("T")[0]);
       if (typeof data.weight === 'number') setWeight(data.weight);
-    },
-  });
+    }
+  }, [data]);
 
   // PATCH mutation for partial update
   const mutation = useMutation({
@@ -100,7 +104,7 @@ export default function SettingsPage() {
       queryClient.invalidateQueries({ queryKey: ["user-settings"] });
       toast.success(t("settings_saved", "Settings saved successfully!"));
     },
-    onError: (err: any) => {
+    onError: (err: Error) => {
       toast.error(t("settings_save_error", "Failed to save settings") + (err?.message ? `: ${err.message}` : ""));
     },
     onSettled: () => setSaving(false),
@@ -131,12 +135,7 @@ export default function SettingsPage() {
     { value: "saturday", label: "Saturday" },
   ];
 
-  // Weekday toggle logic
-  const toggleWeekDay = (day: string) => {
-    setWeekDays((prev) =>
-      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
-    );
-  };
+  // Loading and error states
 
   // Loading and error states
   if (isLoading) { 
@@ -382,7 +381,7 @@ export default function SettingsPage() {
                         onSuccess: () => {
                           toast.success(t("settings_saved", "Settings saved successfully!"));
                         },
-                        onError: (err: any) => {
+                        onError: (err: Error) => {
                           toast.error(t("settings_save_error", "Failed to save settings") + (err?.message ? `: ${err.message}` : ""));
                         },
                         onSettled: () => setWeightSaving(false),

@@ -16,7 +16,7 @@ const SettingsSchema = z.object({
   weight: z.number().optional(), // Added weight
 });
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -40,11 +40,26 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
     // Flatten weight for client convenience
+    // Define the expected structure of the user from Prisma
+    interface UserWithHealthInfo {
+      firstDayOfWeek?: string;
+      weekDays?: string[];
+      birthDate?: Date | null;
+      healthInfo?: {
+        weight?: number | null;
+      } | null;
+    }
+    
+    // Use type assertion to help TypeScript understand the structure
+    const typedUser = user as UserWithHealthInfo;
+    
+    // Create the flattened user object
     const userWithWeight = {
-      ...user,
-      weight: user?.healthInfo?.weight ?? null,
+      firstDayOfWeek: typedUser.firstDayOfWeek,
+      weekDays: typedUser.weekDays,
+      birthDate: typedUser.birthDate,
+      weight: typedUser.healthInfo?.weight ?? null
     };
-    delete userWithWeight.healthInfo;
     return NextResponse.json(userWithWeight);
   } catch (e) {
     return NextResponse.json({ error: 'Failed to fetch user settings', details: e }, { status: 500 });

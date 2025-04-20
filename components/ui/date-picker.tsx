@@ -45,9 +45,10 @@ export function DatePicker({ value, onChange, minDate, maxDate, placeholder = "P
           selected={value}
           onSelect={onChange}
           initialFocus
-          disabled={date =>
-            (minDate && date < minDate) || (maxDate && date > maxDate)
-          }
+          disabled={date => {
+            // Ensure we always return a boolean value
+            return Boolean((minDate && date < minDate) || (maxDate && date > maxDate));
+          }}
         />
       </PopoverContent>
     </Popover>

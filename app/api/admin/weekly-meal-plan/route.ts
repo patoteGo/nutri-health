@@ -54,6 +54,7 @@ export async function POST(req: NextRequest) {
         userId: person,
         weekStart: new Date(weekStart),
         meals,
+        name: `Meal Plan for ${new Date(weekStart).toLocaleDateString()}`, // Add required name field
       },
     });
   }
