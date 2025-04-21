@@ -57,7 +57,6 @@ export default function SettingsPage() {
   const [bornDate, setBornDate] = useState<string>("");
   // Local-only state for UI fields not yet connected to backend
   const [weight, setWeight] = useState<number | undefined>(undefined);
-  const [weightSaving, setWeightSaving] = useState(false);
   const [height, setHeight] = useState<number | undefined>(undefined);
   const [gender, setGender] = useState<string>("");
   // UI state for PATCH loading
@@ -91,7 +90,7 @@ export default function SettingsPage() {
       // Validate with zod
       const parsed = SettingsSchema.partial().safeParse(payload);
       if (!parsed.success) throw new Error("Invalid input");
-      const requestBody: any = {};
+      const requestBody: Record<string, unknown> = {};
       
       // Always include these fields in the request if they are in the payload
       if (payload.firstDayOfWeek) {
@@ -137,15 +136,18 @@ export default function SettingsPage() {
     onSettled: () => setSaving(false),
   });
 
-  // UI handlers for PATCH
+  // UI handlers for PATCH - kept for future use but currently unused
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleSaveFirstDay = () => {
     setSaving(true);
     mutation.mutate({ firstDayOfWeek: firstDay });
   };
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleSaveWeekDays = () => {
     setSaving(true);
     mutation.mutate({ weekDays });
   };
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleSaveBirthDate = () => {
     setSaving(true);
     mutation.mutate({ birthDate: bornDate });

@@ -53,7 +53,7 @@ describe("User Settings Card", () => {
     });
     
     // Verify save button exists which means data loaded successfully
-    const saveButton = await screen.findByTestId("save-first-day");
+    const saveButton = await screen.findByTestId("save-general-settings");
     expect(saveButton).toBeInTheDocument();
     
     // Verify required toggle elements rendered (don't check attributes as they can vary)
@@ -75,14 +75,14 @@ describe("User Settings Card", () => {
     }, { timeout: 2000 });
     
     // Verify save button exists which means data loaded successfully
-    const saveButton = await screen.findByTestId("save-first-day");
+    const saveButton = await screen.findByTestId("save-general-settings");
     expect(saveButton).toBeInTheDocument();
   });
 
   it("PATCHes firstDayOfWeek and shows toast", async () => {
     global.fetch = vi.fn()
       .mockResolvedValueOnce({ ok: true, json: async () => mockSettings }) // GET
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ user: { ...mockSettings, firstDayOfWeek: "FRIDAY" } }) }); // PATCH
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ ...mockSettings, firstDayOfWeek: "FRIDAY" }) }); // PATCH
     render(<SettingsPage />);
     
     // Wait for data fetching to complete
@@ -98,7 +98,7 @@ describe("User Settings Card", () => {
     const fridayToggle = await screen.findByTestId("first-day-toggle-friday");
     expect(fridayToggle).toBeInTheDocument();
     
-    const saveBtn = screen.getByTestId("save-first-day");
+    const saveBtn = screen.getByTestId("save-general-settings");
     expect(saveBtn).toBeInTheDocument();
     
     // Verify the component can be interacted with
@@ -109,7 +109,10 @@ describe("User Settings Card", () => {
     await waitFor(() => {
       expect(fetch).toHaveBeenCalledWith(
         "/api/user/settings",
-        expect.objectContaining({ method: "PATCH" })
+        expect.objectContaining({ 
+          method: "PATCH",
+          body: expect.stringContaining("firstDayOfWeek")
+        })
       );
     });
   });
@@ -117,7 +120,7 @@ describe("User Settings Card", () => {
   it("PATCHes weekDays and handles edge (empty array)", async () => {
     global.fetch = vi.fn()
       .mockResolvedValueOnce({ ok: true, json: async () => mockSettings }) // GET
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ user: { ...mockSettings, weekDays: [] } }) }); // PATCH
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ ...mockSettings, weekDays: [] }) }); // PATCH
     render(<SettingsPage />);
     
     // Wait for data fetching to complete
@@ -130,8 +133,8 @@ describe("User Settings Card", () => {
     }, { timeout: 2000 });
     
     // Verify the component rendered without errors
-    const saveFirstDayButton = await screen.findByTestId('save-first-day');
-    expect(saveFirstDayButton).toBeInTheDocument();
+    const saveButton = await screen.findByTestId('save-general-settings');
+    expect(saveButton).toBeInTheDocument();
   });
 
   it("PATCHes birthDate and handles failure", async () => {
@@ -150,8 +153,8 @@ describe("User Settings Card", () => {
     }, { timeout: 2000 });
     
     // Verify the component rendered without errors
-    const saveFirstDayButton = await screen.findByTestId('save-first-day');
-    expect(saveFirstDayButton).toBeInTheDocument();
+    const saveButton = await screen.findByTestId('save-general-settings');
+    expect(saveButton).toBeInTheDocument();
   });
 
 
@@ -170,8 +173,8 @@ describe("User Settings Card", () => {
     });
     
     // Wait for the save button to appear, showing data is loaded
-    const saveFirstDayButton = await screen.findByTestId('save-first-day');
-    expect(saveFirstDayButton).toBeInTheDocument();
+    const saveButton = await screen.findByTestId('save-general-settings');
+    expect(saveButton).toBeInTheDocument();
     
     // Instead of testing complex age calculation logic, just verify the age-value element exists
     const ageValue = screen.getByTestId("age-value");
@@ -196,8 +199,8 @@ describe("User Settings Card", () => {
     });
     
     // Wait for component to fully render by checking for the button
-    const saveFirstDayButton = await screen.findByTestId('save-first-day');
-    expect(saveFirstDayButton).toBeInTheDocument();
+    const saveButton = await screen.findByTestId('save-general-settings');
+    expect(saveButton).toBeInTheDocument();
     
     // Verify weight and height select elements exist (if we can find them)
     try {
@@ -226,8 +229,8 @@ describe("User Settings Card", () => {
     });
     
     // Wait for component to fully render by checking for the button
-    const saveFirstDayButton = await screen.findByTestId('save-first-day');
-    expect(saveFirstDayButton).toBeInTheDocument();
+    const saveButton = await screen.findByTestId('save-general-settings');
+    expect(saveButton).toBeInTheDocument();
     
     // Instead of trying to interact with complex toggle components, just verify the page loaded
     // without errors by checking that the first-day toggle is present

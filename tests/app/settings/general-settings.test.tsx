@@ -28,8 +28,8 @@ describe("General Settings Card", () => {
     });
     
     // Verify the card is rendered with the save button
-    const saveFirstDayButton = await screen.findByTestId('save-first-day');
-    expect(saveFirstDayButton).toBeInTheDocument();
+    const saveButton = await screen.findByTestId('save-general-settings');
+    expect(saveButton).toBeInTheDocument();
   });
 
   it("allows selecting the first day of the week", async () => {
@@ -89,7 +89,7 @@ describe("General Settings Card", () => {
     expect(toggleGroup).toBeInTheDocument();
     
     // Just verify the page loaded properly
-    const saveWeekDaysButton = screen.getByTestId("save-week-days");
-    expect(saveWeekDaysButton).toBeInTheDocument();
+    const saveButton = screen.getByTestId("save-general-settings");
+    expect(saveButton).toBeInTheDocument();
   });
 });

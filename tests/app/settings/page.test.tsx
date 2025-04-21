@@ -51,8 +51,8 @@ describe('SettingsPage - Weight Integration', () => {
     }, { timeout: 2000 });
     
     // Look for general page elements that should exist
-    const saveFirstDayButton = await screen.findByTestId('save-first-day');
-    expect(saveFirstDayButton).toBeInTheDocument();
+    const saveButton = await screen.findByTestId('save-general-settings');
+    expect(saveButton).toBeInTheDocument();
   });
 
   it('saves weight to backend (success)', async () => {
@@ -70,8 +70,8 @@ describe('SettingsPage - Weight Integration', () => {
     }, { timeout: 2000 });
     
     // Look for save button in DOM (once data is loaded)
-    const saveFirstDayButton = await screen.findByTestId('save-first-day');
-    expect(saveFirstDayButton).toBeInTheDocument();
+    const saveButton = await screen.findByTestId('save-general-settings');
+    expect(saveButton).toBeInTheDocument();
     
     // Verify UI correctly rendered after data loaded
     expect(screen.queryByText(/failed to load settings/i)).not.toBeInTheDocument();
@@ -92,8 +92,8 @@ describe('SettingsPage - Weight Integration', () => {
     }, { timeout: 2000 });
     
     // Verify the component rendered after data loaded
-    const saveFirstDayButton = await screen.findByTestId('save-first-day');
-    expect(saveFirstDayButton).toBeInTheDocument();
+    const saveButton = await screen.findByTestId('save-general-settings');
+    expect(saveButton).toBeInTheDocument();
     
     // Note: We can't easily test the error toast as Sonner creates portals outside the component
   });

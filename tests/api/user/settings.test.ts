@@ -134,6 +134,15 @@ describe('/api/user/settings API', () => {
       ...mockUser,
       firstDayOfWeek: 'FRIDAY' as Weekday
     });
+    vi.mocked(prisma.userHealthInfo.findUnique).mockResolvedValue({ 
+      id: 'health-123',
+      userId: mockUser.id,
+      weight: 70,
+      fat: null,
+      muscle: null,
+      height: null,
+      basal: null
+    });
     
     // Call the API
     const req = createMockNextRequest({ firstDayOfWeek: 'FRIDAY' });
@@ -147,7 +156,7 @@ describe('/api/user/settings API', () => {
     });
     
     const json = await res.json();
-    expect(json.user).toHaveProperty('firstDayOfWeek', 'FRIDAY');
+    expect(json).toHaveProperty('firstDayOfWeek', 'FRIDAY');
   });
 
   it('PATCH allows partial update (weekDays only)', async () => {
@@ -156,6 +165,15 @@ describe('/api/user/settings API', () => {
     vi.mocked(prisma.user.update).mockResolvedValue({
       ...mockUser,
       weekDays: ['TUESDAY'] as Weekday[]
+    });
+    vi.mocked(prisma.userHealthInfo.findUnique).mockResolvedValue({ 
+      id: 'health-123',
+      userId: mockUser.id,
+      weight: 70,
+      fat: null,
+      muscle: null,
+      height: null,
+      basal: null
     });
     
     // Call the API
@@ -166,12 +184,14 @@ describe('/api/user/settings API', () => {
     expect(res.status).toBe(200);
     expect(prisma.user.update).toHaveBeenCalledWith({
       where: { email: mockUser.email },
-      data: expect.objectContaining({ weekDays: ['TUESDAY'] }),
+      data: expect.objectContaining({ 
+        weekDays: { set: ['TUESDAY'] }
+      }),
     });
     
     const json = await res.json();
-    expect(json.user).toHaveProperty('weekDays');
-    expect(json.user.weekDays).toEqual(['TUESDAY']);
+    expect(json).toHaveProperty('weekDays');
+    expect(json.weekDays).toEqual(['TUESDAY']);
   });
 
   it('PATCH returns 401 if not authenticated', async () => {
@@ -220,6 +240,15 @@ describe('/api/user/settings API', () => {
     // Setup mocks
     vi.mocked(getServerSession).mockResolvedValue(mockSession);
     vi.mocked(prisma.user.update).mockResolvedValue(mockUser);
+    vi.mocked(prisma.userHealthInfo.findUnique).mockResolvedValue({ 
+      id: 'health-123',
+      userId: mockUser.id,
+      weight: 70,
+      fat: null,
+      muscle: null,
+      height: null,
+      basal: null
+    });
     
     // Call the API
     const req = createMockNextRequest({});
@@ -228,7 +257,10 @@ describe('/api/user/settings API', () => {
     // Check the response
     expect(res.status).toBe(200);
     const json = await res.json();
-    expect(json).toHaveProperty('user');
+    // Check that the response matches the expected flattened structure
+    expect(json).toHaveProperty('firstDayOfWeek');
+    expect(json).toHaveProperty('weekDays');
+    expect(json).toHaveProperty('weight');
   });
 
   it('PATCH returns 400 if weekDays is not an array', async () => {

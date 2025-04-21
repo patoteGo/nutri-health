@@ -5,7 +5,7 @@ const pwaConfig = {
   dest: "public",
   register: true,
   skipWaiting: true,
-  disable: process.env.NODE_ENV === "development",
+  disable: true, // Temporarily disable PWA for all environments to troubleshoot build issues
 };
 
 const nextConfig: NextConfig = {

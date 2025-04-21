@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { Weekday } from '@prisma/client';
 
 // Enum must match your Prisma Weekday enum
 const WeekdayEnum = z.enum([
@@ -89,7 +90,13 @@ export async function PATCH(req: NextRequest) {
 
   try {
     // Prepare update data
-    const updateData: any = {};
+    // Using Prisma-compatible types for the update operation
+    const updateData: {
+      firstDayOfWeek?: Weekday;
+      weekDays?: { set: Weekday[] };
+      birthDate?: Date;
+      gender?: string;
+    } = {};
     
     // Handle firstDayOfWeek if provided
     if (data.firstDayOfWeek) {
@@ -98,7 +105,7 @@ export async function PATCH(req: NextRequest) {
     
     // Handle weekDays if provided
     if (data.weekDays) {
-      updateData.weekDays = data.weekDays;
+      updateData.weekDays = { set: data.weekDays };
     }
     
     // Handle birthDate if provided
@@ -112,10 +119,11 @@ export async function PATCH(req: NextRequest) {
           }, { status: 400 });
         }
         updateData.birthDate = new Date(data.birthDate);
-      } catch (e) {
+      } catch (error) {
+        // Error is used in the error message
         return NextResponse.json({ 
           error: 'Invalid date', 
-          details: 'Could not parse the provided birth date' 
+          details: `Could not parse the provided birth date: ${error}` 
         }, { status: 400 });
       }
     }
