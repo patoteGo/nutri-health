@@ -4,6 +4,8 @@
 - **Check `TASK.md`** before starting a new task. If the task isn’t listed, add it with a brief description and today's date.
 - **Use consistent naming conventions, file structure, and architecture patterns** as described in `PLANNING.md`.
 - **ALWAYS use pnpm instead of npm**
+- **When you create a new button or input, use first the shadCN component , and if is not avalaible other solution, but always try first shadCN component**
+- **After complete a task run the units test and build the app to make sure is not brake, and if it is fix it**
 
 ### 🧱 Code Structure & Modularity
 - **Never create a file longer than 500 lines of code.** If a file approaches this limit, refactor by splitting it into modules or helper files.
