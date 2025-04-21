@@ -13,6 +13,7 @@ import { useState } from "react";
 import ReactDatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 
 // Zod schema for settings PATCH
 const WeekdayEnum = z.enum([
@@ -312,7 +313,7 @@ export default function SettingsPage() {
           </div>
           {/* General Settings Save Button */}
           <div className="flex justify-end mt-8">
-            <button
+            <Button
               className="btn btn-primary px-6 py-2 rounded"
               onClick={() => {
                 setSaving(true);
@@ -322,7 +323,7 @@ export default function SettingsPage() {
               data-testid="save-general-settings"
             >
               {saving ? t('saving', 'Saving...') : t('save')}
-            </button>
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -439,7 +440,7 @@ export default function SettingsPage() {
 
           {/* User Settings Save Button */}
           <div className="flex justify-end mt-8">
-            <button
+            <Button
               className="btn btn-primary px-6 py-2 rounded"
               onClick={() => {
                 setSaving(true);
@@ -449,7 +450,7 @@ export default function SettingsPage() {
               data-testid="save-user-settings"
             >
               {saving ? t('saving', 'Saving...') : t('save')}
-            </button>
+            </Button>
           </div>
 
           <hr className="my-8 border-muted-foreground/20" />
