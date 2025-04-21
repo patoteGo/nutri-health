@@ -22,7 +22,9 @@ const SettingsSchema = z.object({
   firstDayOfWeek: WeekdayEnum.optional(),
   weekDays: z.array(WeekdayEnum).optional(),
   birthDate: z.string().optional(),
-  weight: z.number().optional(), // Now supports weight
+  weight: z.number().optional(),
+  gender: z.string().optional(),
+  height: z.number().optional(),
 });
 
 // Helper to map UI <-> backend enum casing
@@ -78,24 +80,49 @@ export default function SettingsPage() {
       if (Array.isArray(data.weekDays)) setWeekDays(fromBackendDays(data.weekDays));
       if (data.birthDate) setBornDate(data.birthDate.split("T")[0]);
       if (typeof data.weight === 'number') setWeight(data.weight);
+      if (typeof data.height === 'number') setHeight(data.height);
+      if (data.gender) setGender(data.gender);
     }
   }, [data]);
 
   // PATCH mutation for partial update
   const mutation = useMutation({
-    mutationFn: async (payload: Partial<{ firstDayOfWeek: string; weekDays: string[]; birthDate: string; weight: number }>) => {
+    mutationFn: async (payload: Partial<{ firstDayOfWeek: string; weekDays: string[]; birthDate: string; weight: number; gender: string; height: number; }>) => {
       // Validate with zod
       const parsed = SettingsSchema.partial().safeParse(payload);
       if (!parsed.success) throw new Error("Invalid input");
+      const requestBody: any = {};
+      
+      // Always include these fields in the request if they are in the payload
+      if (payload.firstDayOfWeek) {
+        requestBody.firstDayOfWeek = toBackendDay(payload.firstDayOfWeek);
+      }
+      
+      if (payload.weekDays) {
+        requestBody.weekDays = toBackendDays(payload.weekDays);
+      }
+      
+      if (payload.birthDate) {
+        requestBody.birthDate = payload.birthDate;
+      }
+      
+      // Include weight and height even if they are 0
+      if ('weight' in payload) {
+        requestBody.weight = payload.weight;
+      }
+      
+      if ('height' in payload) {
+        requestBody.height = payload.height;
+      }
+      
+      if (payload.gender) {
+        requestBody.gender = payload.gender;
+      }
+      
       const res = await fetch("/api/user/settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...(payload.firstDayOfWeek && { firstDayOfWeek: toBackendDay(payload.firstDayOfWeek) }),
-          ...(payload.weekDays && { weekDays: toBackendDays(payload.weekDays) }),
-          ...(payload.birthDate && { birthDate: payload.birthDate }),
-          ...(typeof payload.weight === 'number' && { weight: payload.weight }),
-        }),
+        body: JSON.stringify(requestBody),
       });
       if (!res.ok) throw new Error("Failed to update settings");
       return await res.json();
@@ -187,14 +214,7 @@ export default function SettingsPage() {
                     </ToggleGroupItem>
                   ))}
                 </ToggleGroup>
-                <button
-                  className="btn btn-primary btn-sm ml-4"
-                  onClick={handleSaveFirstDay}
-                  disabled={saving}
-                  data-testid="save-first-day"
-                >
-                  {t('save')}
-                </button>
+                
               </div>
               <div className="text-muted-foreground mt-1 text-sm">
                 {t('selected')}: {t(`weekday_${firstDay}`)}
@@ -280,20 +300,27 @@ export default function SettingsPage() {
                   <div className="text-muted-foreground text-sm">
                     {t('selected')}: {weekDays.map(d => t(`weekday_${d}`)).join(", ")}
                   </div>
-                  <button
-                    className="btn btn-primary btn-sm"
-                    onClick={handleSaveWeekDays}
-                    disabled={saving}
-                    data-testid="save-week-days"
-                  >
-                    {t('save')}
-                  </button>
+                  
                 </div>
                 <div className="text-muted-foreground text-xs">
                   {t('week_days_desc', 'Select how many days are included in your week.')}
                 </div>
               </div>
             </div>
+          </div>
+          {/* General Settings Save Button */}
+          <div className="flex justify-end mt-8">
+            <button
+              className="btn btn-primary px-6 py-2 rounded"
+              onClick={() => {
+                setSaving(true);
+                mutation.mutate({ firstDayOfWeek: firstDay, weekDays });
+              }}
+              disabled={saving}
+              data-testid="save-general-settings"
+            >
+              {saving ? t('saving', 'Saving...') : t('save')}
+            </button>
           </div>
         </CardContent>
       </Card>
@@ -334,14 +361,7 @@ export default function SettingsPage() {
                   data-testid="born-date-input"
                   isClearable
                 />
-                <button
-                  className="btn btn-primary btn-sm ml-4"
-                  onClick={handleSaveBirthDate}
-                  disabled={saving || !bornDate}
-                  data-testid="save-birth-date"
-                >
-                  {t('save')}
-                </button>
+                
                 <span className="text-muted-foreground text-sm" data-testid="age-value">
                   {t('age')}: {bornDate ? calculateAge(bornDate) : '--'}
                 </span>
@@ -356,7 +376,7 @@ export default function SettingsPage() {
                   value={weight ? String(weight) : ""}
                   onValueChange={val => setWeight(Number(val))}
                   data-testid="weight-input"
-                  disabled={weightSaving || saving}
+                  disabled={saving}
                 >
                   <SelectTrigger className="w-40">
                     <SelectValue placeholder={t('select_weight')} />
@@ -370,29 +390,7 @@ export default function SettingsPage() {
                     })}
                   </SelectContent>
                 </Select>
-                <button
-                  className="btn btn-primary btn-sm"
-                  onClick={async () => {
-                    if (typeof weight !== 'number') return;
-                    setWeightSaving(true);
-                    mutation.mutate(
-                      { weight },
-                      {
-                        onSuccess: () => {
-                          toast.success(t("settings_saved", "Settings saved successfully!"));
-                        },
-                        onError: (err: Error) => {
-                          toast.error(t("settings_save_error", "Failed to save settings") + (err?.message ? `: ${err.message}` : ""));
-                        },
-                        onSettled: () => setWeightSaving(false),
-                      }
-                    );
-                  }}
-                  disabled={weightSaving || saving || typeof weight !== 'number'}
-                  data-testid="save-weight"
-                >
-                  {weightSaving ? t('saving', 'Saving...') : t('save')}
-                </button>
+                
               </div>
             </div>
 
@@ -403,6 +401,7 @@ export default function SettingsPage() {
                 value={height ? String(height) : ""}
                 onValueChange={val => setHeight(Number(val))}
                 data-testid="height-input"
+                disabled={saving}
               >
                 <SelectTrigger className="w-40">
                   <SelectValue placeholder={t('select_height')} />
@@ -427,12 +426,28 @@ export default function SettingsPage() {
                 onValueChange={val => val && setGender(val)}
                 className="flex gap-2"
                 data-testid="gender-toggle-group"
+                disabled={saving}
               >
                 <ToggleGroupItem value="male" data-testid="gender-male">{t('male')}</ToggleGroupItem>
                 <ToggleGroupItem value="female" data-testid="gender-female">{t('female')}</ToggleGroupItem>
                 <ToggleGroupItem value="other" data-testid="gender-other">{t('other')}</ToggleGroupItem>
               </ToggleGroup>
             </div>
+          </div>
+
+          {/* User Settings Save Button */}
+          <div className="flex justify-end mt-8">
+            <button
+              className="btn btn-primary px-6 py-2 rounded"
+              onClick={() => {
+                setSaving(true);
+                mutation.mutate({ birthDate: bornDate, weight, height, gender });
+              }}
+              disabled={saving}
+              data-testid="save-user-settings"
+            >
+              {saving ? t('saving', 'Saving...') : t('save')}
+            </button>
           </div>
 
           <hr className="my-8 border-muted-foreground/20" />
