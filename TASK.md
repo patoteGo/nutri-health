@@ -1,5 +1,14 @@
 # Task Board
 
+## MVP Tasks (Minimum Viable Product)
+
+- [ ] View menus for the logged-in person for the current day and time slot
+- [ ] View a list of all menus, filterable by category and person
+- [ ] When creating a menu, edit ingredient quantities
+- [ ] Duplicate menus in the kanban so one menu can be assigned to multiple days for a person
+- [ ] Display images for each menu
+
+
 ## Backlog
 
 - [x] Add Breadcrumb in header using shadcn/ui [2025-04-18]
@@ -10,9 +19,9 @@
 - Add form submission and validation logic
 - Add loading/skeleton states for selectors if data is async
 
-- [ ] Implement multilingual support (English & Portuguese; default language auto-detected from user device). [Added: 2025-04-18]
-  - [ ] Internationalize all UI strings (discovered during implementation)
-  - [ ] Internationalize all UI strings (discovered during implementation)
+- [x] Implement multilingual support (English & Portuguese; default language auto-detected from user device). [Added: 2025-04-18]
+  - [x] Internationalize all UI strings (discovered during implementation)
+  - [x] Internationalize all UI strings (discovered during implementation)
 - [ ] Scaffold Next.js project with PWA & Tailwind
 - [ ] Integrate ShadCN UI components
 - [ ] Set up NextAuth.js with Google login
@@ -30,14 +39,13 @@
 - [ ] Add gamification: weekly goals, badges, progress charts
 - [ ] Build user profile page for bioimpedance data
 - [ ] Placeholder: Bioimpedance device data importer
-- [ ] Integrate Zod for all API/data validation
+- [x] Integrate Zod for all API/data validation
 - [x] Set up Vitest & React Testing Library tests [2025-04-18]
   - [x] Test: expected use [2025-04-18]
   - [x] Test: edge case [2025-04-18]
   - [x] Test: failure case [2025-04-18]
 - [x] Create /tests directory and mirror app structure [2025-04-18]
-- [ ] Configure CI/CD pipeline on GitHub Actions
-- [ ] Add Vercel deployment config
+- [x] Add Vercel deployment config
 
 ## In Progress
 - [ ] Admin Dashboard Epic: Build advanced weekly meal planner for each person [2025-04-19]
@@ -50,8 +58,8 @@
   - [ ] Step 5: API & DB — Ensure backend supports menus, ingredients, assignments, and validation [2025-04-19]
   - [ ] Step 6: Tests — Add/expand unit and integration tests for all new features [2025-04-19]
   - [ ] Step 7: UI Polish — Improve UX, loading, error states, and accessibility [2025-04-19]
-- [ ] Tailwind & ShadCN setup
-- [ ] NextAuth.js configuration
+- [x] Tailwind & ShadCN setup
+- [x] NextAuth.js configuration
 
 ## Done
 - [x] Add Breadcrumb in header using shadcn/ui [2025-04-18]
@@ -64,6 +72,6 @@
 - [x] Basic Next.js & Tailwind installation
 
 ## Discovered During Work
-- [ ] Migrated from jest-dom matchers to Vitest built-in matchers for compatibility.
+- [x] Migrated from jest-dom matchers to Vitest built-in matchers for compatibility.
 - [ ] Updated tests to use getByRole for language switcher buttons to avoid ambiguity with aria-label.
 - [ ] [Add any new TODOs here as development progresses]
