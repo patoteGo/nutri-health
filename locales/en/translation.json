@@ -26,7 +26,7 @@
   "selected": "Selected",
   "first_day_desc": "This will be the day to start your planning on the diet.",
   "days_in_week": "Days in a week",
-  "day": "day",
+  "day_singular": "day",
   "days": "days",
   "days_in_week_desc": "These are the days you are committed to your diet.",
   "week_days": "Week Days",
@@ -82,7 +82,7 @@
   "no_users_found": "No users found",
   "week_start": "Week start",
   "managing_meals_for": "Managing meals for:",
-  "day": "Day",
+  "day_label": "Day",
   "save": "Save",
   "error_saving_plan": "Error saving plan",
   "saved": "Saved!",
@@ -146,5 +146,13 @@
   "no_unassigned_menus": "No unassigned menus",
   "new_menu": "New Menu",
   "name": "Name",
-  "menu_name_placeholder": "Enter menu name"
+  "menu_name_placeholder": "Enter menu name",
+  "carbs": "Carbs",
+  "protein": "Protein",
+  "fat": "Fat",
+  "edit_ingredient": "Edit Ingredient",
+  "units": "Units",
+  "cancel": "Cancel",
+  "save_changes": "Save Changes",
+  "edit_menu": "Edit Menu"
 }
