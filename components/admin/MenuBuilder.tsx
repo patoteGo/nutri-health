@@ -100,6 +100,23 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
     }
   }
 
+  // Function to get the appropriate label based on the ingredient unit
+  function getUnitLabel(unit?: string | null): string {
+    if (!unit) return t('quantity', 'Quantity');
+    
+    switch (unit) {
+      case 'GRAM': return t('weight', 'Weight');
+      case 'ML': return t('volume', 'Volume');
+      case 'SLICE': return t('slices', 'Slices');
+      case 'UNIT': return t('units', 'Units');
+      case 'TEASPOON': return t('teaspoons', 'Teaspoons');
+      case 'TABLESPOON': return t('tablespoons', 'Tablespoons');
+      case 'CUP': return t('cups', 'Cups');
+      case 'PIECE': return t('pieces', 'Pieces');
+      default: return t('quantity', 'Quantity');
+    }
+  }
+
   function addIngredient() {
     if (!selectedIngredient || ingredientWeight <= 0) return;
     if (isDuplicate) return;
@@ -422,10 +439,18 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
                           const newIngredients = [...ingredients];
                           newIngredients[editingIngredientIndex] = {
                             ...ingredient,
-                            weight: newIngredients[editingIngredientIndex].weight,
-                            unit: newIngredients[editingIngredientIndex].unit
+                            weight: newIngredients[editingIngredientIndex].weight
+                            // Let the ingredient's unit be used from the database
                           };
                           setIngredients(newIngredients);
+                          
+                          // Force a re-render to update the label
+                          setEditingIngredientIndex(prevIndex => {
+                            if (prevIndex !== null) {
+                              return prevIndex;
+                            }
+                            return null;
+                          });
                         }
                       }}
                       selectedIngredient={ingredients[editingIngredientIndex]}
@@ -435,7 +460,7 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                   <label htmlFor="edit-ingredient-weight" className="text-right">
-                    {t('weight', 'Weight')}:
+                    {getUnitLabel(ingredients[editingIngredientIndex].unit)}:
                   </label>
                   <Input
                     id="edit-ingredient-weight"
@@ -452,30 +477,7 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
                     }}
                   />
                 </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <label htmlFor="edit-ingredient-unit" className="text-right">
-                    {t('unit', 'Unit')}:
-                  </label>
-                  <Select
-                    value={ingredients[editingIngredientIndex].unit || 'GRAM'}
-                    onValueChange={(value) => {
-                      const newIngredients = [...ingredients];
-                      newIngredients[editingIngredientIndex] = {
-                        ...newIngredients[editingIngredientIndex],
-                        unit: value as 'GRAM' | 'UNIT' | 'ML' | 'TEASPOON' | 'TABLESPOON' | 'SLICE' | 'CUP' | 'PIECE'
-                      };
-                      setIngredients(newIngredients);
-                    }}
-                  >
-                    <SelectTrigger className="col-span-3" id="edit-ingredient-unit">
-                      <SelectValue placeholder={t('select_unit', 'Select unit')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="GRAM">g ({t('gram', 'Gram')})</SelectItem>
-                      <SelectItem value="ML">ml ({t('milliliter', 'Milliliter')})</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+
               </div>
             )}
           </div>

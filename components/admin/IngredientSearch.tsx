@@ -6,6 +6,20 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { cn } from "../../lib/utils";
 
+// Define a raw ingredient interface for type safety when handling API responses
+interface RawIngredientData {
+  id?: string | number;
+  name?: string;
+  carbs?: number | string;
+  protein?: number | string;
+  fat?: number | string;
+  imageUrl?: string | null;
+  unit?: string | null;
+  searchTerms?: string[];
+  weight?: number | string;
+  [key: string]: unknown; // Allow for additional properties
+}
+
 // Define the ingredient schema directly in this component to match the Prisma model
 // Using .passthrough() to allow additional properties from the API
 const IngredientSchema = z.object({
@@ -98,7 +112,7 @@ export function IngredientSearch({
               console.error('Validation error:', parsed.error);
               
               // Fallback: try to extract the required fields manually
-              const manuallyParsed = data.map((item: any) => ({
+              const manuallyParsed = data.map((item: RawIngredientData) => ({
                 id: String(item.id || ''),
                 name: String(item.name || ''),
                 carbs: Number(item.carbs || 0),

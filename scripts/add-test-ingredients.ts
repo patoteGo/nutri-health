@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, IngredientUnit } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -20,7 +20,7 @@ async function addTestIngredients() {
       carbs: 0,
       protein: 31,
       fat: 3.6,
-      unit: 'GRAM',
+      unit: IngredientUnit.GRAM,
       searchTerms: ['chicken', 'poultry', 'meat', 'protein']
     },
     {
@@ -28,7 +28,7 @@ async function addTestIngredients() {
       carbs: 23,
       protein: 2.6,
       fat: 0.9,
-      unit: 'GRAM',
+      unit: IngredientUnit.GRAM,
       searchTerms: ['rice', 'grain', 'carb']
     },
     {
@@ -36,7 +36,7 @@ async function addTestIngredients() {
       carbs: 6.6,
       protein: 2.8,
       fat: 0.4,
-      unit: 'GRAM',
+      unit: IngredientUnit.GRAM,
       searchTerms: ['vegetable', 'green', 'cruciferous']
     },
     {
@@ -44,7 +44,7 @@ async function addTestIngredients() {
       carbs: 0,
       protein: 25,
       fat: 13,
-      unit: 'GRAM',
+      unit: IngredientUnit.GRAM,
       searchTerms: ['fish', 'seafood', 'omega-3']
     },
     {
@@ -52,7 +52,7 @@ async function addTestIngredients() {
       carbs: 20.1,
       protein: 1.6,
       fat: 0.1,
-      unit: 'GRAM',
+      unit: IngredientUnit.GRAM,
       searchTerms: ['potato', 'tuber', 'carb']
     },
     {
@@ -60,7 +60,7 @@ async function addTestIngredients() {
       carbs: 0,
       protein: 0,
       fat: 100,
-      unit: 'ML',
+      unit: IngredientUnit.ML,
       searchTerms: ['oil', 'fat', 'cooking']
     },
     {
@@ -68,7 +68,7 @@ async function addTestIngredients() {
       carbs: 3.6,
       protein: 2.9,
       fat: 0.4,
-      unit: 'GRAM',
+      unit: IngredientUnit.GRAM,
       searchTerms: ['vegetable', 'green', 'leafy']
     },
     {
@@ -76,7 +76,7 @@ async function addTestIngredients() {
       carbs: 3.6,
       protein: 10,
       fat: 0.4,
-      unit: 'GRAM',
+      unit: IngredientUnit.GRAM,
       searchTerms: ['dairy', 'protein', 'breakfast']
     },
     {
@@ -84,7 +84,7 @@ async function addTestIngredients() {
       carbs: 21.3,
       protein: 4.4,
       fat: 1.9,
-      unit: 'GRAM',
+      unit: IngredientUnit.GRAM,
       searchTerms: ['grain', 'protein', 'carb']
     },
     {
@@ -92,7 +92,7 @@ async function addTestIngredients() {
       carbs: 8.5,
       protein: 2,
       fat: 15,
-      unit: 'GRAM',
+      unit: IngredientUnit.GRAM,
       searchTerms: ['fruit', 'healthy fat']
     }
   ];
