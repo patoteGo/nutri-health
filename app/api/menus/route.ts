@@ -100,3 +100,48 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: `Failed to delete menu: ${message}` }, { status: 500 });
   }
 }
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get('id');
+    if (!id) {
+      return NextResponse.json({ error: 'Missing menu id in query string (?id=...)' }, { status: 400 });
+    }
+
+    const body = await req.json();
+    const parsed = z.object({
+      ingredients: z.array(IngredientSchema),
+    }).safeParse(body);
+
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid ingredients data', details: parsed.error.errors }, { status: 400 });
+    }
+
+    const { ingredients } = parsed.data;
+
+    const menu = await prisma.meal.update({
+      where: { id },
+      data: {
+        parts: ingredients.map(ing => ({
+          id: ing.id,
+          name: ing.name,
+          weight: ing.weight,
+          unit: ing.unit,
+          imageUrl: ing.imageUrl,
+          carbs: ing.carbs,
+          protein: ing.protein,
+          fat: ing.fat,
+        })),
+      },
+    });
+
+    return NextResponse.json({
+      id: menu.id,
+      ingredients: menu.parts,
+    });
+  } catch (e) {
+    const message = typeof e === 'object' && e !== null && 'message' in e ? (e as { message?: string }).message : String(e);
+    return NextResponse.json({ error: `Failed to update menu: ${message}` }, { status: 500 });
+  }
+}

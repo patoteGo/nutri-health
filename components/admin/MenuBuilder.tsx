@@ -3,17 +3,27 @@ import React, { useState, useEffect } from "react";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Select, SelectItem, SelectContent, SelectTrigger, SelectValue } from "../../components/ui/select";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetFooter,
+  SheetClose
+} from "../ui/sheet";
 import { Tooltip, TooltipTrigger, TooltipContent } from "../../components/ui/tooltip";
 import { useTranslation } from "react-i18next";
 import { Droppable, Draggable } from "@hello-pangea/dnd";
-import type { Menu, Ingredient } from "@/lib/types";
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { z } from "zod";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { z } from "zod";
+// import { cn } from "../../lib/utils";
+import IngredientSearch, { Ingredient } from "./IngredientSearch";
 import type { MealMoment } from "./__mealMomentTypes";
+import type { Menu } from "@/lib/types";
 
-const IngredientSchema = z.object({
+// Local schema for validation
+const LocalIngredientSchema = z.object({
   id: z.string(),
   name: z.string(),
   carbs: z.number(),
@@ -23,9 +33,6 @@ const IngredientSchema = z.object({
   unit: z.string().optional().nullable(),
 });
 
-
-
-
 interface MenuBuilderProps {
   menus: Menu[];
   onMenusChange: (menus: Menu[]) => void;
@@ -33,24 +40,32 @@ interface MenuBuilderProps {
   parentIsDragging?: boolean;
 }
 
+// No need for extended type as we're handling the conversion in the component
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function MenuBuilder({ menus, onMenusChange, personId, parentIsDragging = false}: MenuBuilderProps) {
+function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
+  // Convert incoming menus to ensure ingredients have the right properties
+  const convertedMenus = React.useMemo(() => {
+    return menus.map(menu => ({
+      ...menu,
+      ingredients: menu.ingredients?.map(ing => ({
+        ...ing,
+        weight: typeof ing.weight === 'number' ? ing.weight : 0,
+        unit: (ing.unit === 'GRAM' || ing.unit === 'ML') ? ing.unit : 'GRAM'
+      }))
+    }));
+  }, [menus]);
   const { t } = useTranslation();
-  const unassignedMenus = menus.filter(menu => !menu.assignedDay && !menu.assignedMoment);
+  const unassignedMenus = convertedMenus.filter(menu => !menu.assignedDay && !menu.assignedMoment);
   
   const [menuName, setMenuName] = useState("");
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
-  const [ingredientQuery, setIngredientQuery] = useState("");
-  const [ingredientOptions, setIngredientOptions] = useState<z.infer<typeof IngredientSchema>[]>([]);
-  const [ingredientLoading, setIngredientLoading] = useState(false);
-  const [ingredientError, setIngredientError] = useState<string | null>(null);
+  const [editingIngredientIndex, setEditingIngredientIndex] = useState<number | null>(null);
+  const [showEditIngredientSheet, setShowEditIngredientSheet] = useState(false);
 
   const [mealMoments, setMealMoments] = useState<MealMoment[]>([]);
   const [category, setCategory] = useState<string>("");
 
   useEffect(() => {
-    // Use absolute URL to make it work in tests
     const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
     fetch(`${baseUrl}/api/meal-moments`)
       .then(res => res.json())
@@ -63,36 +78,8 @@ function MenuBuilder({ menus, onMenusChange, personId, parentIsDragging = false}
       });
   }, []);
 
-  // Show ingredientError as toast if not null
-  useEffect(() => {
-    if (ingredientError) {
-      toast.error(ingredientError);
-    }
-  }, [ingredientError]);
-    
-  const [selectedIngredient, setSelectedIngredient] = useState<z.infer<typeof IngredientSchema> | null>(null);
+  const [selectedIngredient, setSelectedIngredient] = useState<Ingredient | null>(null);
   const [ingredientWeight, setIngredientWeight] = useState<number>(0);
-
-  // Fetch ingredients as user types
-  useEffect(() => {
-    // Don't search if there's already a selected ingredient or no query
-    if (!ingredientQuery || selectedIngredient) {
-      setIngredientOptions([]);
-      return;
-    }
-    setIngredientLoading(true);
-    setIngredientError(null);
-    fetch(`/api/ingredients?search=${encodeURIComponent(ingredientQuery)}`)
-      .then(async (res) => {
-        if (!res.ok) throw new Error("Failed to fetch ingredients");
-        const data = await res.json();
-        const parsed = z.array(IngredientSchema).safeParse(data);
-        if (!parsed.success) throw new Error("Invalid ingredient data");
-        setIngredientOptions(parsed.data);
-      })
-      .catch((e) => setIngredientError(e.message))
-      .finally(() => setIngredientLoading(false));
-  }, [ingredientQuery, selectedIngredient]);
 
   const isDuplicate = Boolean(selectedIngredient && ingredients.some(ing => ing.id === selectedIngredient.id));
 
@@ -104,13 +91,11 @@ function MenuBuilder({ menus, onMenusChange, personId, parentIsDragging = false}
       { ...selectedIngredient, weight: ingredientWeight },
     ]);
     setSelectedIngredient(null);
-    setIngredientQuery("");
     setIngredientWeight(0);
   }
 
   const queryClient = useQueryClient();
 
-  // Mutation for deleting a menu from the DB
   const deleteMenuMutation = useMutation({
     mutationFn: async (id: string) => {
       const res = await fetch(`/api/menus?id=${id}`, { method: 'DELETE' });
@@ -126,7 +111,6 @@ function MenuBuilder({ menus, onMenusChange, personId, parentIsDragging = false}
       queryClient.invalidateQueries({ queryKey: ['menus'] });
     },
     onError: (error: unknown) => {
-      // Type guard for error
       const message = typeof error === 'object' && error !== null && 'message' in error ? (error as { message?: string }).message : String(error);
       toast.error(message || t('menu_delete_failed', 'Failed to delete menu'));
     },
@@ -144,7 +128,9 @@ function MenuBuilder({ menus, onMenusChange, personId, parentIsDragging = false}
     },
     onSuccess: (menu: Menu) => {
       // Use the real menu object returned from the backend (with DB id)
-      onMenusChange([...menus, menu]);
+      const updatedMenus = [...menus];
+      updatedMenus.push(menu);
+      onMenusChange(updatedMenus);
       setMenuName("");
       setCategory(mealMoments.length > 0 ? mealMoments[0].name : "");
       setIngredients([]);
@@ -226,47 +212,12 @@ function MenuBuilder({ menus, onMenusChange, personId, parentIsDragging = false}
               {t('ingredients', 'Ingredients')}
             </label>
             <div className="flex items-start gap-2 mb-1">
-              <div className="flex-1 relative">
-                <Input
-                  id="ingredients"
-                  value={ingredientQuery}
-                  onChange={e => setIngredientQuery(e.target.value)}
+              <div className="flex-1">
+                <IngredientSearch
+                  onIngredientSelect={setSelectedIngredient}
+                  selectedIngredient={selectedIngredient}
                   placeholder={t('search_ingredients', 'Search ingredients')}
                 />
-                {ingredientOptions.length > 0 && (
-                  <div className="absolute z-10 mt-1 w-full bg-popover text-popover-foreground shadow-lg rounded-md border border-border max-h-60 overflow-auto">
-                    {ingredientOptions.map(ing => (
-                      <button
-                        key={ing.id}
-                        type="button"
-                        className={cn(
-  "w-full text-left px-3 py-2 flex justify-between items-center rounded-sm transition-colors",
-  "hover:bg-accent hover:text-accent-foreground"
-) }
-                        onClick={() => {
-                          setSelectedIngredient(ing);
-                          setIngredientQuery(ing.name);
-                          setIngredientOptions([]);
-                          // Move focus to the weight input field
-                          (document.querySelector('input[type="number"]') as HTMLInputElement | null)?.focus();
-                        }}
-                      >
-                        <span>{ing.name}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {ing.carbs}C {ing.protein}P {ing.fat}F
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {ingredientLoading && (
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                    <svg className="animate-spin h-4 w-4 text-muted-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                  </div>
-                )}
               </div>
               <div className="w-24">
                 <Input
@@ -304,22 +255,39 @@ function MenuBuilder({ menus, onMenusChange, personId, parentIsDragging = false}
         <ul className="list-disc ml-6 mt-2 text-sm">
           {ingredients.map((ing, idx) => (
             <li key={idx} className="flex items-center gap-3 py-2">
-              <button
-                type="button"
-                aria-label="Delete ingredient"
-                title="Delete ingredient"
-                className="text-destructive hover:bg-destructive/10 rounded-full p-1"
-                onClick={() => {
-                  setIngredients(prev => prev.filter((_, i) => i !== idx));
-                }}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-              </button>
+              <div className="flex gap-1">
+                {/* Edit button */}
+                <button
+                  type="button"
+                  aria-label="Edit ingredient"
+                  title="Edit ingredient"
+                  className="text-primary hover:bg-primary/10 rounded-full p-1"
+                  onClick={() => {
+                    // Open a sheet or dialog to edit the ingredient
+                    setEditingIngredientIndex(idx);
+                    setShowEditIngredientSheet(true);
+                  }}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+                </button>
+                {/* Delete button */}
+                <button
+                  type="button"
+                  aria-label="Delete ingredient"
+                  title="Delete ingredient"
+                  className="text-destructive hover:bg-destructive/10 rounded-full p-1"
+                  onClick={() => {
+                    setIngredients(prev => prev.filter((_, i) => i !== idx));
+                  }}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+              </div>
               <div className="flex-1 flex flex-col">
-                <span>{t(`ingredient_${ing.name.toLowerCase().replace(/\s+/g, '_')}`, ing.name)} — {ing.weight}{
+                <span>{t(`ingredient_${ing.name ? ing.name.toLowerCase().replace(/\s+/g, '_') : ''}`, ing.name)} — {ing.weight}{
                   ing.unit === 'GRAM' ? 'g'
                   : ing.unit === 'ML' ? 'ml'
-                  : ing.unit ? ` (${ing.unit.toLowerCase()})` 
+                  : ing.unit ? ` (${ing.unit})` 
                   : ''
                 }</span>
                 <span className="text-xs text-muted-foreground">
@@ -406,6 +374,101 @@ function MenuBuilder({ menus, onMenusChange, personId, parentIsDragging = false}
           )}
         </Droppable>
       </div>
+      
+      {/* Edit Ingredient Sheet */}
+      <Sheet open={showEditIngredientSheet} onOpenChange={setShowEditIngredientSheet}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>{t('edit_ingredient', 'Edit Ingredient')}</SheetTitle>
+          </SheetHeader>
+          <div className="py-4 space-y-4">
+            {editingIngredientIndex !== null && ingredients[editingIngredientIndex] && (
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <label htmlFor="edit-ingredient-name" className="text-right">
+                    {t('name', 'Name')}:
+                  </label>
+                  <div className="col-span-3">
+                    <IngredientSearch
+                      onIngredientSelect={(ingredient) => {
+                        if (ingredient) {
+                          const newIngredients = [...ingredients];
+                          newIngredients[editingIngredientIndex] = {
+                            ...ingredient,
+                            weight: newIngredients[editingIngredientIndex].weight,
+                            unit: newIngredients[editingIngredientIndex].unit
+                          };
+                          setIngredients(newIngredients);
+                        }
+                      }}
+                      selectedIngredient={ingredients[editingIngredientIndex]}
+                      placeholder={t('search_ingredients', 'Search ingredients')}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <label htmlFor="edit-ingredient-weight" className="text-right">
+                    {t('weight', 'Weight')}:
+                  </label>
+                  <Input
+                    id="edit-ingredient-weight"
+                    type="number"
+                    value={ingredients[editingIngredientIndex].weight}
+                    className="col-span-3"
+                    onChange={(e) => {
+                      const newIngredients = [...ingredients];
+                      newIngredients[editingIngredientIndex] = {
+                        ...newIngredients[editingIngredientIndex],
+                        weight: Number(e.target.value)
+                      };
+                      setIngredients(newIngredients);
+                    }}
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <label htmlFor="edit-ingredient-unit" className="text-right">
+                    {t('unit', 'Unit')}:
+                  </label>
+                  <Select
+                    value={ingredients[editingIngredientIndex].unit || 'GRAM'}
+                    onValueChange={(value) => {
+                      const newIngredients = [...ingredients];
+                      newIngredients[editingIngredientIndex] = {
+                        ...newIngredients[editingIngredientIndex],
+                        unit: value as 'GRAM' | 'ML' | undefined
+                      };
+                      setIngredients(newIngredients);
+                    }}
+                  >
+                    <SelectTrigger className="col-span-3" id="edit-ingredient-unit">
+                      <SelectValue placeholder={t('select_unit', 'Select unit')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="GRAM">g ({t('gram', 'Gram')})</SelectItem>
+                      <SelectItem value="ML">ml ({t('milliliter', 'Milliliter')})</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+          </div>
+          <SheetFooter>
+            <SheetClose asChild>
+              <Button variant="outline">{t('cancel', 'Cancel')}</Button>
+            </SheetClose>
+            <Button 
+              onClick={() => {
+                // Validate ingredients before closing
+                z.array(LocalIngredientSchema).safeParse(ingredients);
+                setShowEditIngredientSheet(false);
+                setEditingIngredientIndex(null);
+              }}
+            >
+              {t('save_changes', 'Save Changes')}
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
