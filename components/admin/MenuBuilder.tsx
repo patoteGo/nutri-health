@@ -335,12 +335,20 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
                   : ''
                 }</span>
                 <span className="text-xs text-muted-foreground">
-                  {t('ingredient_nutrition_info', {
-                    carbs: ing.carbs,
-                    protein: ing.protein,
-                    fat: ing.fat,
-                    unit: ing.unit === 'GRAM' ? '100g' : ing.unit === 'ML' ? '100ml' : 'unit'
-                  })}
+                  {/* Calculate nutrition values based on weight/units */}
+                  {(() => {
+                    // Base values are per 100g/ml or per unit
+                    const baseAmount = ing.unit === 'GRAM' || ing.unit === 'ML' ? 100 : 1;
+                    const weight = typeof ing.weight === 'number' ? ing.weight : 0;
+                    const multiplier = weight / baseAmount;
+                    
+                    // Calculate the scaled nutrition values
+                    const scaledCarbs = (ing.carbs * multiplier).toFixed(1);
+                    const scaledProtein = (ing.protein * multiplier).toFixed(1);
+                    const scaledFat = (ing.fat * multiplier).toFixed(1);
+                    
+                    return `${scaledCarbs}g ${t('carbs', 'carbs')}, ${scaledProtein}g ${t('protein', 'protein')}, ${scaledFat}g ${t('fat', 'fat')}`;
+                  })()}
                 </span>
               </div>
             </li>
@@ -403,7 +411,7 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
                             {menu.ingredients.map((ingredient, idx) => (
                               <li key={idx}>
                                 {ingredient.name}
-                                {ingredient.weight ? ` (${ingredient.weight}g)` : ""}
+                                {ingredient.weight ? ` (${ingredient.weight}${ingredient.unit === 'GRAM' ? 'g' : ingredient.unit === 'ML' ? 'ml' : ''})` : ""}
                               </li>
                             ))}
                           </ul>
