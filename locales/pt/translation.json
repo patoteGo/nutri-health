@@ -142,5 +142,6 @@
   "confirm_delete": "Confirmar Exclusão",
   "delete_menu_confirmation": "Tem certeza que deseja excluir este cardápio? Esta ação não pode ser desfeita.",
   "confirm": "Confirmar",
-  "loading_menus": "Carregando cardápios..."
+  "loading_menus": "Carregando cardápios...",
+  "slices": "Fatias"
 }

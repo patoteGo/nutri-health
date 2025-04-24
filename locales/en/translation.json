@@ -158,5 +158,11 @@
   "confirm_delete": "Confirm Delete",
   "delete_menu_confirmation": "Are you sure you want to delete this menu? This action cannot be undone.",
   "confirm": "Confirm",
-  "loading_menus": "Loading menus..."
+  "loading_menus": "Loading menus...",
+  "drop_to_add_to_day": "Drop to add to {{day}}",
+  "ingredient_french_bread": "French Bread",
+  "ingredient_cheese_slice": "Cheese Slice",
+  "saving": "Saving...",
+  "menu_updated_success": "Menu updated successfully!",
+  "slices": "Slices"
 }
