@@ -4,6 +4,7 @@
 - **Check `TASK.md`** before starting a new task. If the task isn’t listed, add it with a brief description and today's date.
 - **Use consistent naming conventions, file structure, and architecture patterns** as described in `PLANNING.md`.
 - **ALWAYS use pnpm instead of npm**
+- **NEVER use any as a type, it will break the build**
 - **When you create a new button or input, use first the shadCN component , and if is not avalaible other solution, but always try first shadCN component**
 - **After complete a task run the units test and build the app to make sure is not brake, and if it is fix it**
 
