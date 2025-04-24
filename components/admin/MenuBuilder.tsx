@@ -86,12 +86,21 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
   function addIngredient() {
     if (!selectedIngredient || ingredientWeight <= 0) return;
     if (isDuplicate) return;
+    
+    // Add the ingredient to the list
     setIngredients(prev => [
       ...prev,
       { ...selectedIngredient, weight: ingredientWeight },
     ]);
+    
+    // Clear the selected ingredient
     setSelectedIngredient(null);
+    
+    // Reset the ingredient weight
     setIngredientWeight(0);
+    
+    // Clear the search input by forcing a re-render of the IngredientSearch component
+    // This is done by providing a key that changes when we want to reset the component
   }
 
   const queryClient = useQueryClient();
@@ -214,6 +223,7 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
             <div className="flex items-start gap-2 mb-1">
               <div className="flex-1">
                 <IngredientSearch
+                  key={`ingredient-search-${ingredients.length}`} // Add a key that changes when ingredients are added
                   onIngredientSelect={setSelectedIngredient}
                   selectedIngredient={selectedIngredient}
                   placeholder={t('search_ingredients', 'Search ingredients')}
@@ -435,7 +445,7 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
                       const newIngredients = [...ingredients];
                       newIngredients[editingIngredientIndex] = {
                         ...newIngredients[editingIngredientIndex],
-                        unit: value as 'GRAM' | 'ML' | undefined
+                        unit: value as 'GRAM' | 'UNIT' | 'ML' | 'TEASPOON' | 'TABLESPOON' | 'SLICE' | 'CUP' | 'PIECE'
                       };
                       setIngredients(newIngredients);
                     }}

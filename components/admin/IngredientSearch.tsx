@@ -6,7 +6,8 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { cn } from "../../lib/utils";
 
-// Define the ingredient schema directly in this component to avoid import issues
+// Define the ingredient schema directly in this component to match the Prisma model
+// Using .passthrough() to allow additional properties from the API
 const IngredientSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -14,9 +15,12 @@ const IngredientSchema = z.object({
   protein: z.number(),
   fat: z.number(),
   imageUrl: z.string().optional().nullable(),
-  unit: z.enum(['GRAM', 'ML']).optional().nullable(),
+  // Make unit optional and allow any string value to be flexible with the database
+  unit: z.string().optional().nullable(),
+  // Make searchTerms optional
+  searchTerms: z.array(z.string()).optional(),
   weight: z.number().optional(),
-});
+}).passthrough();
 
 export type Ingredient = z.infer<typeof IngredientSchema>;
 
@@ -47,8 +51,14 @@ export function IngredientSearch({
 
   // Fetch ingredients as user types
   useEffect(() => {
-    // Don't search if there's already a selected ingredient or no query
-    if (!query || selectedIngredient) {
+    // Don't search if there's no query
+    if (!query) {
+      setOptions([]);
+      return;
+    }
+    
+    // If the query exactly matches the selected ingredient name, don't show dropdown
+    if (selectedIngredient && query === selectedIngredient.name) {
       setOptions([]);
       return;
     }
@@ -56,22 +66,76 @@ export function IngredientSearch({
     setLoading(true);
     setError(null);
     
-    fetch(`/api/ingredients?search=${encodeURIComponent(query)}`)
-      .then(async (res) => {
-        if (!res.ok) throw new Error("Failed to fetch ingredients");
-        const data = await res.json();
-        const parsed = z.array(IngredientSchema).safeParse(data);
-        if (!parsed.success) throw new Error("Invalid ingredient data");
-        // Ensure the data has the right types
-        const typedData = parsed.data.map(item => ({
-          ...item,
-          unit: item.unit as 'GRAM' | 'ML' | undefined,
-          weight: item.weight || 0
-        }));
-        setOptions(typedData);
-      })
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
+    // Add a small delay to prevent too many API calls while typing
+    const timeoutId = setTimeout(() => {
+      setLoading(true);
+      setError(null);
+      
+      fetch(`/api/ingredients?search=${encodeURIComponent(query)}`)
+        .then(async (res) => {
+          if (!res.ok) throw new Error("Failed to fetch ingredients");
+          const data = await res.json();
+          
+          // Log the data for debugging
+          console.log('API response:', data);
+          
+          if (!Array.isArray(data)) {
+            console.error('Expected array but got:', typeof data);
+            throw new Error('Invalid response format: expected an array');
+          }
+          
+          if (data.length === 0) {
+            // Handle empty results gracefully
+            setOptions([]);
+            return;
+          }
+          
+          try {
+            // Try to parse the data with our schema
+            const parsed = z.array(IngredientSchema).safeParse(data);
+            
+            if (!parsed.success) {
+              console.error('Validation error:', parsed.error);
+              
+              // Fallback: try to extract the required fields manually
+              const manuallyParsed = data.map((item: any) => ({
+                id: String(item.id || ''),
+                name: String(item.name || ''),
+                carbs: Number(item.carbs || 0),
+                protein: Number(item.protein || 0),
+                fat: Number(item.fat || 0),
+                imageUrl: item.imageUrl || null,
+                unit: item.unit || 'GRAM',
+                searchTerms: Array.isArray(item.searchTerms) ? item.searchTerms : [],
+                weight: Number(item.weight || 0)
+              }));
+              
+              setOptions(manuallyParsed);
+              return;
+            }
+            
+            // Use the properly validated data
+            const typedData = parsed.data.map(item => ({
+              ...item,
+              searchTerms: item.searchTerms || [],
+              weight: item.weight || 0
+            }));
+            
+            setOptions(typedData);
+          } catch (error) {
+            console.error('Error processing ingredient data:', error);
+            throw error;
+          }
+        })
+        .catch((e) => {
+          console.error('Fetch error:', e);
+          setError(e.message);
+        })
+        .finally(() => setLoading(false));
+    }, 300); // 300ms delay for debouncing
+    
+    // Cleanup the timeout if the component unmounts or query changes again
+    return () => clearTimeout(timeoutId);
   }, [query, selectedIngredient]);
 
   return (
@@ -80,9 +144,14 @@ export function IngredientSearch({
         value={query}
         onChange={(e) => {
           setQuery(e.target.value);
+          // Clear selected ingredient when the search query changes
           if (selectedIngredient && e.target.value !== selectedIngredient.name) {
             onIngredientSelect(null);
           }
+        }}
+        onBlur={() => {
+          // Close dropdown when input loses focus (with small delay to allow click on options)
+          setTimeout(() => setOptions([]), 200);
         }}
         placeholder={placeholder}
       />
@@ -100,7 +169,7 @@ export function IngredientSearch({
               onClick={() => {
                 onIngredientSelect(ing);
                 setQuery(ing.name);
-                setOptions([]);
+                setOptions([]); // Clear options to close dropdown
               }}
             >
               <span>{ing.name}</span>
