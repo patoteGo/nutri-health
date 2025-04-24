@@ -313,18 +313,54 @@ mutationFn: async (newPlan: unknown) => {
           <WeeklyMealKanban menus={menus} />
         )}
       </DragDropContext>
-      <Button
-        onClick={() => mutation.mutate({
-          person: selectedPerson,
-          weekStart: weekStart.toISOString(),
-          meals: (editPlan && typeof editPlan === "object" && editPlan !== null && 'meals' in editPlan) ? (editPlan as { meals: unknown }).meals : undefined,
-        })}
-        disabled={!selectedPerson || !editPlan || mutation.isPending}
-      >
-        {mutation.isPending ? t('saving', 'Saving...') : t('save', 'Save')}
-      </Button>
-      {mutation.isError && <div className="text-red-500">{String(t('error_saving_plan', 'Error saving plan'))}</div>}
-      {mutation.isSuccess && <div className="text-green-600">{t('saved', 'Saved!')}</div>}
+      <div className="mt-1 pt-2 flex justify-end">
+        <Button
+          type="button"
+          onClick={() => {
+            // Only use menus that have been assigned to a day and moment
+            const assignedMenus = menus.filter(menu => menu.assignedDay && menu.assignedMoment);
+            
+            // Format the data according to WeeklyMealPlanSchema
+            const mealsData: Record<string, Record<string, { parts: Array<{name: string, imageUrl?: string}> }>> = {};
+            
+            // Process each assigned menu
+            assignedMenus.forEach(menu => {
+              const day = menu.assignedDay as string;
+              const moment = menu.assignedMoment as string;
+              
+              // Initialize the day if it doesn't exist
+              if (!mealsData[day]) {
+                mealsData[day] = {};
+              }
+              
+              // Set the meal for this day and moment
+              mealsData[day][moment] = {
+                parts: [
+                  {
+                    name: menu.name,
+                    imageUrl: menu.imageUrl as string | undefined,
+                  }
+                ]
+              };
+            });
+            
+            // Send the formatted data to the server
+            mutation.mutate({
+              person: selectedPerson,
+              weekStart: weekStart.toISOString(),
+              meals: mealsData
+            }, {
+              onSuccess: () => {
+                toast.success(t('plan_saved_success', 'Meal plan saved successfully!'));
+              }
+            });
+          }}
+          disabled={!selectedPerson || mutation.isPending}
+        >
+          {mutation.isPending ? t('saving', 'Saving...') : t('save', 'Save')}
+        </Button>
+        {mutation.isError && <div className="text-red-500 ml-4">{String(t('error_saving_plan', 'Error saving plan'))}</div>}
+      </div>
     </div>
   );
 }
