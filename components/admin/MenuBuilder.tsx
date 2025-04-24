@@ -82,6 +82,23 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
   const [ingredientWeight, setIngredientWeight] = useState<number>(0);
 
   const isDuplicate = Boolean(selectedIngredient && ingredients.some(ing => ing.id === selectedIngredient.id));
+  
+  // Function to get the appropriate placeholder based on the ingredient unit
+  function getUnitPlaceholder(unit?: string | null): string {
+    if (!unit) return 'g';
+    
+    switch (unit) {
+      case 'GRAM': return 'g';
+      case 'ML': return 'ml';
+      case 'SLICE': return 'slice(s)';
+      case 'UNIT': return 'unit(s)';
+      case 'TEASPOON': return 'tsp';
+      case 'TABLESPOON': return 'tbsp';
+      case 'CUP': return 'cup(s)';
+      case 'PIECE': return 'piece(s)';
+      default: return 'g';
+    }
+  }
 
   function addIngredient() {
     if (!selectedIngredient || ingredientWeight <= 0) return;
@@ -234,7 +251,7 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
                   type="number"
                   value={ingredientWeight || ''}
                   onChange={e => setIngredientWeight(parseInt(e.target.value) || 0)}
-                  placeholder="g"
+                  placeholder={getUnitPlaceholder(selectedIngredient?.unit)}
                   disabled={!selectedIngredient}
                 />
               </div>
