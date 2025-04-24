@@ -13,9 +13,9 @@ import { getWeekStart } from "../../lib/weekUtils";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import WeeklyMealKanban from "./WeeklyMealKanban";
+import type { MealMoment } from "./__mealMomentTypes";
 
 // Types
-
 
 // Define weekDays constant for use in drag-and-drop logic
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -29,18 +29,10 @@ const weekDays = [
   "sunday",
 ]; // Lowercase to match Kanban
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const mealMoments = [
-  "BREAKFAST",
-  "SNACK1",
-  "LUNCH",
-  "SNACK2",
-  "DINNER",
-  "SUPPER"
-] as const;
-
 export default function WeeklyMealPlanAdmin() {
   const [menus, setMenus] = useState<Menu[]>([]);
+  const [mealMoments, setMealMoments] = useState<MealMoment[]>([]);
+  const [category, setCategory] = useState<string>("");
 
   type MenuPlan = {
     menus: Menu[];
@@ -94,7 +86,9 @@ export default function WeeklyMealPlanAdmin() {
     }
 
     // Find the dragged menu
+    console.log({menus, draggableId, source, destination})
     const menu = menus.find(m => m.id === draggableId);
+
     if (!menu) {
       console.error('PARENT: Menu not found:', draggableId);
       return;
@@ -169,6 +163,20 @@ export default function WeeklyMealPlanAdmin() {
     },
   });
 
+  // Fetch all unassigned menus for the selected person
+  const { data: unassignedMenus } = useQuery<Menu[]>({
+    queryKey: ["unassignedMenus", selectedPerson],
+    queryFn: async () => {
+      const url = selectedPerson 
+        ? `/api/menus/unassigned?personId=${selectedPerson}` 
+        : `/api/menus/unassigned`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Failed to fetch unassigned menus");
+      return await res.json();
+    },
+    enabled: true, // Always fetch unassigned menus
+  });
+
   // Fetch plan for selected person/week
   const { data: plan } = useQuery<unknown>({
     queryKey: ["weeklyMealPlan", selectedPerson, weekStart.toISOString()],
@@ -182,13 +190,41 @@ export default function WeeklyMealPlanAdmin() {
     enabled: !!selectedPerson,
   });
 
+  // Fetch meal moments from API
+  useEffect(() => {
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+    fetch(`${baseUrl}/api/meal-moments`)
+      .then(res => res.json())
+      .then((data: MealMoment[]) => {
+        setMealMoments(data);
+        if (data.length > 0) setCategory(data[0].name);
+      })
+      .catch(err => {
+        console.error('Failed to fetch meal moments:', err);
+      });
+  }, []);
+
   useEffect(() => {
     setEditPlan(plan);
-    // Use type guard for plan
-    if (plan && typeof plan === "object" && plan !== null && 'menus' in plan && Array.isArray((plan as MenuPlan).menus)) {
-      setMenus((plan as MenuPlan).menus);
+    
+    // Combine unassigned menus with plan menus
+    const planMenus = plan && typeof plan === "object" && plan !== null && 'menus' in plan && Array.isArray((plan as MenuPlan).menus) 
+      ? (plan as MenuPlan).menus 
+      : [];
+      
+    // Only use unassigned menus if we have them and if they're not already in the plan
+    const allMenus = [...planMenus];
+    
+    if (unassignedMenus && Array.isArray(unassignedMenus)) {
+      // Filter out menus that are already in the plan to avoid duplicates
+      const existingMenuIds = new Set(planMenus.map(m => m.id));
+      const filteredUnassigned = unassignedMenus.filter(m => !existingMenuIds.has(m.id));
+      allMenus.push(...filteredUnassigned);
     }
-  }, [plan]);
+    
+    setMenus(allMenus);
+    console.log("Setting menus:", allMenus); // Log for debugging
+  }, [plan, unassignedMenus]);
 
   // Save mutation
   const mutation = useMutation({
@@ -267,7 +303,10 @@ mutationFn: async (newPlan: unknown) => {
             menus={menus} 
             onMenusChange={setMenus} 
             personId={selectedPerson} 
-            parentIsDragging={isDragging} 
+            parentIsDragging={isDragging}
+            mealMoments={mealMoments}
+            category={category}
+            onCategoryChange={setCategory}
           />
         </section>
         {typeof editPlan === 'object' && editPlan !== null && (

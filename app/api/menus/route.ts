@@ -75,6 +75,40 @@ export async function POST(req: NextRequest) {
   }
 }
 
+export async function GET(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const personId = searchParams.get('personId');
+
+    // Query to get all meals for the person
+    const meals = await prisma.meal.findMany({
+      where: personId ? { userId: personId } : undefined,
+      include: {
+        mealMoment: true,
+      },
+    });
+
+    // Transform the meals to match the expected Menu format
+    const menus = meals.map(meal => ({
+      id: meal.id,
+      name: meal.parts && Array.isArray(meal.parts) && meal.parts.length > 0 && 
+            typeof meal.parts[0] === 'object' && meal.parts[0] !== null && 'name' in meal.parts[0] ? 
+            String(meal.parts[0].name) : 'Unnamed Menu',
+      category: meal.mealMoment?.name || '',
+      personId: meal.userId || '',
+      ingredients: meal.parts || [],
+      // These properties will be set in the UI when assigned to a day/moment
+      assignedDay: null,
+      assignedMoment: null,
+    }));
+
+    return NextResponse.json(menus);
+  } catch (e) {
+    const message = typeof e === 'object' && e !== null && 'message' in e ? (e as { message?: string }).message : String(e);
+    return NextResponse.json({ error: `Failed to retrieve menus: ${message}` }, { status: 500 });
+  }
+}
+
 export async function DELETE(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);

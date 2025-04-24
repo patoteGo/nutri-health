@@ -154,5 +154,9 @@
   "units": "Units",
   "cancel": "Cancel",
   "save_changes": "Save Changes",
-  "edit_menu": "Edit Menu"
+  "edit_menu": "Edit Menu",
+  "confirm_delete": "Confirm Delete",
+  "delete_menu_confirmation": "Are you sure you want to delete this menu? This action cannot be undone.",
+  "confirm": "Confirm",
+  "loading_menus": "Loading menus..."
 }

@@ -11,11 +11,19 @@ import {
   SheetFooter,
   SheetClose
 } from "../ui/sheet";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog";
 import { Tooltip, TooltipTrigger, TooltipContent } from "../../components/ui/tooltip";
 import { useTranslation } from "react-i18next";
 import { Droppable, Draggable } from "@hello-pangea/dnd";
 import { toast } from "sonner";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 // import { cn } from "../../lib/utils";
 import IngredientSearch, { Ingredient as SearchIngredient } from "./IngredientSearch";
@@ -60,6 +68,9 @@ interface MenuBuilderProps {
   onMenusChange: (menus: Menu[]) => void;
   personId: string;
   parentIsDragging?: boolean;
+  mealMoments?: MealMoment[];
+  category?: string;
+  onCategoryChange?: (category: string) => void;
 }
 
 // No need for extended type as we're handling the conversion in the component
@@ -83,7 +94,47 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
     }));
   }, [menus]);
   const { t } = useTranslation();
-  const unassignedMenus = convertedMenus.filter(menu => !menu.assignedDay && !menu.assignedMoment);
+  
+  // Fetch all menus from the database
+  const { data: dbMenus, isLoading: menusLoading, error: menusError } = useQuery<Menu[]>({
+    queryKey: ["menus", personId],
+    queryFn: async () => {
+      const res = await fetch(`/api/menus?personId=${personId}`);
+      if (!res.ok) throw new Error("Failed to fetch menus");
+      return await res.json();
+    },
+    enabled: !!personId,
+  });
+  
+  // Convert database menus to ensure ingredients have the right properties
+  const convertedDbMenus = React.useMemo(() => {
+    if (!dbMenus || !Array.isArray(dbMenus)) return [];
+    return dbMenus.map((menu: Menu) => ({
+      ...menu,
+      ingredients: menu.ingredients?.map((ing: LibIngredient) => ({
+        ...ing,
+        weight: typeof ing.weight === 'number' ? ing.weight : 0,
+        unit: (ing.unit === 'GRAM' || ing.unit === 'ML') ? ing.unit : 'GRAM',
+        // Add index signature compatibility
+        id: ing.id || '',
+        name: ing.name || '',
+        carbs: typeof ing.carbs === 'number' ? ing.carbs : 0,
+        protein: typeof ing.protein === 'number' ? ing.protein : 0,
+        fat: typeof ing.fat === 'number' ? ing.fat : 0
+      } as Ingredient))
+    }));
+  }, [dbMenus]);
+  
+  // Combine menus from props and database, removing duplicates
+  const allMenus = React.useMemo(() => {
+    const propMenuIds = new Set(convertedMenus.map((menu: Menu) => menu.id));
+    // Only include DB menus that aren't already in props
+    const uniqueDbMenus = convertedDbMenus.filter((menu: Menu) => !propMenuIds.has(menu.id));
+    return [...convertedMenus, ...uniqueDbMenus];
+  }, [convertedMenus, convertedDbMenus]);
+  
+  // Filter unassigned menus
+  const unassignedMenus = allMenus.filter(menu => !menu.assignedDay && !menu.assignedMoment);
   
   const [menuName, setMenuName] = useState("");
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
@@ -93,6 +144,10 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
   // State for editing an existing menu
   const [editingMenu, setEditingMenu] = useState<Menu | null>(null);
   const [showEditMenuSheet, setShowEditMenuSheet] = useState(false);
+  
+  // State for delete confirmation dialog
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [menuToDelete, setMenuToDelete] = useState<string | null>(null);
   
   // Ref to track the current ingredient being edited in the menu
   const currentEditingMenuIngredientIndex = useRef<number | null>(null);
@@ -216,6 +271,27 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
 
   const queryClient = useQueryClient();
 
+  // Function to handle delete confirmation
+  const handleDeleteConfirm = (id: string) => {
+    setMenuToDelete(id);
+    setIsDeleteDialogOpen(true);
+  };
+  
+  // Function to execute delete when confirmed
+  const confirmDeleteMenu = () => {
+    if (menuToDelete) {
+      deleteMenuMutation.mutate(menuToDelete);
+      setIsDeleteDialogOpen(false);
+      setMenuToDelete(null);
+    }
+  };
+  
+  // Function to cancel delete
+  const cancelDeleteMenu = () => {
+    setIsDeleteDialogOpen(false);
+    setMenuToDelete(null);
+  };
+  
   const deleteMenuMutation = useMutation({
     mutationFn: async (id: string) => {
       const res = await fetch(`/api/menus?id=${id}`, { method: 'DELETE' });
@@ -518,7 +594,11 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
               ref={provided.innerRef} 
               className={`border rounded-lg p-4 bg-muted/50 min-h-[120px] transition-all grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 ${snapshot.isDraggingOver ? 'ring-2 ring-primary' : ''}`}
             >
-              {unassignedMenus.length === 0 ? (
+              {menusLoading ? (
+                <p className="text-sm text-muted-foreground">{t('loading_menus', 'Loading menus...')}</p>
+              ) : menusError ? (
+                <p className="text-sm text-destructive">{t('error_loading_menus', 'Error loading menus')}</p>
+              ) : unassignedMenus.length === 0 ? (
                 <p className="text-sm text-muted-foreground italic">{t('no_unassigned_menus', 'No unassigned menus')}</p>
               ) : (
                 unassignedMenus.map((menu, index) => (
@@ -561,7 +641,7 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
                               className="h-6 w-6 text-destructive hover:bg-destructive/10"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                deleteMenuMutation.mutate(menu.id);
+                                handleDeleteConfirm(menu.id);
                               }}
                             >
                               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></svg>
@@ -575,7 +655,7 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
                         )}
                         {menu.ingredients && menu.ingredients.length > 0 && (
                           <ul className="text-xs text-muted-foreground pl-4 list-disc">
-                            {menu.ingredients.map((ingredient, idx) => (
+                            {menu.ingredients.map((ingredient: Ingredient, idx: number) => (
                               <li key={idx}>
                                 {ingredient.name}
                                 {ingredient.weight ? ` (${ingredient.weight}${ingredient.unit === 'GRAM' ? 'g' : ingredient.unit === 'ML' ? 'ml' : ''})` : ""}
@@ -868,6 +948,26 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
           </SheetFooter>
         </SheetContent>
       </Sheet>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('confirm_delete', 'Confirm Delete')}</DialogTitle>
+            <DialogDescription>
+              {t('delete_menu_confirmation', 'Are you sure you want to delete this menu? This action cannot be undone.')}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex justify-end gap-2 pt-4">
+            <Button variant="outline" onClick={cancelDeleteMenu}>
+              {t('cancel', 'Cancel')}
+            </Button>
+            <Button variant="destructive" onClick={confirmDeleteMenu}>
+              {t('confirm', 'Confirm')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

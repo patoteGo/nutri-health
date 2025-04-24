@@ -50,9 +50,18 @@ beforeEach(() => {
       } as any;
     }
     if (typeof url === "string" && url.includes("/api/menus")) {
+      // If it's a POST request or doesn't include personId, it's creating a menu
+      if ((url.includes("personId") === false && typeof url === "string") || 
+          (typeof url !== "string" && (url as Request).method === "POST")) {
+        return {
+          ok: true,
+          json: async () => ({ id: "new-menu-id", name: "Test Menu" }),
+        } as any;
+      }
+      // If it includes personId, it's fetching menus - return an array
       return {
         ok: true,
-        json: async () => ({ id: "new-menu-id", name: "Test Menu" }),
+        json: async () => [],
       } as any;
     }
     throw new Error("Unexpected fetch url: " + url);
@@ -105,9 +114,10 @@ describe("MenuBuilder ingredient adding", () => {
       
       // Find the add button (button with + icon)
       const addButtons = screen.getAllByRole('button');
-      const addButton = addButtons.find(btn => 
-        btn.querySelector('svg')?.querySelectorAll('path, line').length >= 1
-      );
+      const addButton = addButtons.find(btn => {
+        const svgElement = btn.querySelector('svg');
+        return svgElement && svgElement.querySelectorAll('path, line').length >= 1;
+      });
       
       // Simulate selecting an ingredient
       if (addButton) {
@@ -149,7 +159,7 @@ describe("MenuBuilder ingredient adding", () => {
     // Should not call the API with POST method
     const fetchCalls = (global.fetch as any).mock.calls;
     const postCalls = fetchCalls.filter((call: any[]) => 
-      call[1] && call[1].method === 'POST' && call[0].includes('/api/menus')
+      call[1] && call[1].method === 'POST' && typeof call[0] === 'string' && call[0].includes('/api/menus')
     );
     expect(postCalls.length).toBe(0);
   });
