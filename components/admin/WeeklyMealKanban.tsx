@@ -3,6 +3,33 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Card } from "../ui/card";
+
+// Helper function to get the appropriate unit abbreviation
+function getUnitAbbreviation(ingredient: any): string {
+  // Special case for eggs - they should always be counted in units
+  if (ingredient.name && ingredient.name.toLowerCase().includes('egg')) {
+    return 'u';
+  }
+  
+  // Special case for slices - they should always be counted in slices
+  if (ingredient.name && ingredient.name.toLowerCase().includes('slice')) {
+    return 'sl';
+  }
+  
+  if (!ingredient.unit) return 'g';
+  
+  switch (ingredient.unit) {
+    case 'GRAM': return 'g';
+    case 'ML': return 'ml';
+    case 'SLICE': return 'sl';
+    case 'UNIT': return 'u';
+    case 'TEASPOON': return 'tsp';
+    case 'TABLESPOON': return 'tbsp';
+    case 'CUP': return 'cup';
+    case 'PIECE': return 'pc';
+    default: return 'g';
+  }
+}
 import { Droppable, Draggable, DraggableProvided } from "@hello-pangea/dnd";
 import type { Menu } from "@/lib/types";
 // Removed unused toast import
@@ -72,19 +99,19 @@ const MenuCard: React.FC<{
     >
       <Card className="p-2 flex flex-col justify-between">
         <div className="flex justify-between items-center gap-2 mb-1">
-          <span className="font-medium">{menu.name}</span>
+          {menu.category && (
+            <span className="inline-block text-xs rounded bg-muted px-2 py-0.5">
+              {menu.category}
+            </span>
+          )}
+          <div className="flex gap-1"></div>
         </div>
-        {menu.category && (
-          <span className="inline-block text-xs rounded bg-muted px-2 py-0.5 mb-1">
-            {menu.category}
-          </span>
-        )}
         {menu.ingredients && menu.ingredients.length > 0 && (
           <ul className="text-xs text-muted-foreground pl-4 list-disc">
             {menu.ingredients.map((ingredient, idx) => (
               <li key={idx}>
                 {ingredient.name}
-                {ingredient.weight ? ` (${ingredient.weight}g)` : ""}
+                {ingredient.weight ? ` (${ingredient.weight}${getUnitAbbreviation(ingredient)})` : ""}
               </li>
             ))}
           </ul>

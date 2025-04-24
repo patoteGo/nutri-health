@@ -1,6 +1,33 @@
 "use client";
 import React, { useState } from "react";
 import { useDraggable } from "@dnd-kit/core";
+
+// Helper function to get the appropriate unit abbreviation
+function getUnitAbbreviation(ingredient: any): string {
+  // Special case for eggs - they should always be counted in units
+  if (ingredient.name && ingredient.name.toLowerCase().includes('egg')) {
+    return 'u';
+  }
+  
+  // Special case for slices - they should always be counted in slices
+  if (ingredient.name && ingredient.name.toLowerCase().includes('slice')) {
+    return 'sl';
+  }
+  
+  if (!ingredient.unit) return 'g';
+  
+  switch (ingredient.unit) {
+    case 'GRAM': return 'g';
+    case 'ML': return 'ml';
+    case 'SLICE': return 'sl';
+    case 'UNIT': return 'u';
+    case 'TEASPOON': return 'tsp';
+    case 'TABLESPOON': return 'tbsp';
+    case 'CUP': return 'cup';
+    case 'PIECE': return 'pc';
+    default: return 'g';
+  }
+}
 import { Card } from "../ui/card";
 import {
   Dialog,
@@ -93,7 +120,7 @@ const DraggableMenuCard: React.FC<DraggableMenuCardProps> = React.memo(({ menu, 
             {menu.ingredients.map((ingredient, idx) => (
               <li key={idx}>
                 {ingredient.name}
-                {ingredient.weight ? ` (${ingredient.weight}g)` : ""}
+                {ingredient.weight ? ` (${ingredient.weight}${getUnitAbbreviation(ingredient)})` : ""}
               </li>
             ))}
           </ul>
@@ -185,7 +212,7 @@ const DraggableMenuCard: React.FC<DraggableMenuCardProps> = React.memo(({ menu, 
                             {menu.ingredients.map((ingredient, idx) => (
                               <li key={idx}>
                                 {ingredient.name}
-                                {ingredient.weight ? ` (${ingredient.weight}g)` : ""}
+                                {ingredient.weight ? ` (${ingredient.weight}${getUnitAbbreviation(ingredient)})` : ""}
                               </li>
                             ))}
                           </ul>

@@ -1,5 +1,32 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
+
+// Helper function to get the appropriate unit abbreviation
+function getUnitAbbreviation(ingredient: any): string {
+  // Special case for eggs - they should always be counted in units
+  if (ingredient.name && ingredient.name.toLowerCase().includes('egg')) {
+    return 'u';
+  }
+  
+  // Special case for slices - they should always be counted in slices
+  if (ingredient.name && ingredient.name.toLowerCase().includes('slice')) {
+    return 'sl';
+  }
+  
+  if (!ingredient.unit) return 'g';
+  
+  switch (ingredient.unit) {
+    case 'GRAM': return 'g';
+    case 'ML': return 'ml';
+    case 'SLICE': return 'sl';
+    case 'UNIT': return 'u';
+    case 'TEASPOON': return 'tsp';
+    case 'TABLESPOON': return 'tbsp';
+    case 'CUP': return 'cup';
+    case 'PIECE': return 'pc';
+    default: return 'g';
+  }
+}
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Select, SelectItem, SelectContent, SelectTrigger, SelectValue } from "../../components/ui/select";
@@ -206,6 +233,11 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
       return 'unit(s)';
     }
     
+    // Special case for slices - they should always be counted in slices
+    if (ingredientName && ingredientName.toLowerCase().includes('slice')) {
+      return 'slice(s)';
+    }
+    
     if (!unit) return 'g';
     
     switch (unit) {
@@ -226,6 +258,11 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
     // Special case for eggs - they should always be counted in units
     if (ingredientName && ingredientName.toLowerCase().includes('egg')) {
       return t('units', 'Units');
+    }
+    
+    // Special case for slices - they should always be counted in slices
+    if (ingredientName && ingredientName.toLowerCase().includes('slice')) {
+      return t('slices', 'Slices');
     }
     
     if (!unit) return t('quantity', 'Quantity');
@@ -553,12 +590,7 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
                 </button>
               </div>
               <div className="flex-1 flex flex-col">
-                <span>{t(`ingredient_${ing.name ? ing.name.toLowerCase().replace(/\s+/g, '_') : ''}`, ing.name)} — {ing.weight}{
-                  ing.unit === 'GRAM' ? 'g'
-                  : ing.unit === 'ML' ? 'ml'
-                  : ing.unit ? ` (${ing.unit})` 
-                  : ''
-                }</span>
+                <span>{t(`ingredient_${ing.name ? ing.name.toLowerCase().replace(/\s+/g, '_') : ''}`, ing.name)} — {ing.weight}{getUnitAbbreviation(ing)}</span>
                 <span className="text-xs text-muted-foreground">
                   {/* Calculate nutrition values based on weight/units */}
                   {(() => {
@@ -620,7 +652,11 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
                         }}
                       >
                         <div className="flex justify-between items-center gap-2 mb-1">
-                          <span className="font-medium">{menu.name}</span>
+                          {menu.category && (
+                            <span className="inline-block text-xs rounded bg-muted px-2 py-0.5">
+                              {menu.category}
+                            </span>
+                          )}
                           <div className="flex gap-1">
                             {/* Edit button */}
                             <Button 
@@ -648,17 +684,12 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
                             </Button>
                           </div>
                         </div>
-                        {menu.category && (
-                          <span className="inline-block text-xs rounded bg-muted px-2 py-0.5 mb-1">
-                            {menu.category}
-                          </span>
-                        )}
                         {menu.ingredients && menu.ingredients.length > 0 && (
                           <ul className="text-xs text-muted-foreground pl-4 list-disc">
                             {menu.ingredients.map((ingredient: Ingredient, idx: number) => (
                               <li key={idx}>
                                 {ingredient.name}
-                                {ingredient.weight ? ` (${ingredient.weight}${ingredient.unit === 'GRAM' ? 'g' : ingredient.unit === 'ML' ? 'ml' : ''})` : ""}
+                                {ingredient.weight ? ` (${ingredient.weight}${getUnitAbbreviation(ingredient)})` : ""}
                               </li>
                             ))}
                           </ul>
@@ -911,7 +942,7 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
                         </button>
                       </div>
                       <div className="flex-1 flex flex-col">
-                        <span>{t(`ingredient_${ing.name ? ing.name.toLowerCase().replace(/\s+/g, '_') : ''}`, ing.name)} — {ing.weight}{ing.unit === 'GRAM' ? 'g' : ing.unit === 'ML' ? 'ml' : ing.unit ? ` (${ing.unit})` : ''}</span>
+                        <span>{t(`ingredient_${ing.name ? ing.name.toLowerCase().replace(/\s+/g, '_') : ''}`, ing.name)} — {ing.weight}{getUnitAbbreviation(ing)}</span>
                         <span className="text-xs text-muted-foreground">
                           {/* Calculate nutrition values based on weight/units */}
                           {(() => {
