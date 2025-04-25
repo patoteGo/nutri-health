@@ -3,7 +3,10 @@ import React, { useState } from "react";
 import { useDraggable } from "@dnd-kit/core";
 
 // Helper function to get the appropriate unit abbreviation
-function getUnitAbbreviation(ingredient: any): string {
+import type { Ingredient as IngredientType } from "@/lib/types";
+
+// Helper function to get the appropriate unit abbreviation
+function getUnitAbbreviation(ingredient: Partial<IngredientType>): string {
   // Special case for eggs - they should always be counted in units
   if (ingredient.name && ingredient.name.toLowerCase().includes('egg')) {
     return 'u';

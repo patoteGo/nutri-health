@@ -2,19 +2,22 @@
 import React, { useState, useEffect, useRef } from "react";
 
 // Helper function to get the appropriate unit abbreviation
-function getUnitAbbreviation(ingredient: any): string {
+import type { Ingredient as IngredientType } from "@/lib/types";
+
+// Helper function to get the appropriate unit abbreviation
+function getUnitAbbreviation(ingredient: Partial<IngredientType>): string {
   // Special case for eggs - they should always be counted in units
   if (ingredient.name && ingredient.name.toLowerCase().includes('egg')) {
     return 'u';
   }
-  
+
   // Special case for slices - they should always be counted in slices
   if (ingredient.name && ingredient.name.toLowerCase().includes('slice')) {
     return 'sl';
   }
-  
+
   if (!ingredient.unit) return 'g';
-  
+
   switch (ingredient.unit) {
     case 'GRAM': return 'g';
     case 'ML': return 'ml';
@@ -102,7 +105,7 @@ interface MenuBuilderProps {
 
 // No need for extended type as we're handling the conversion in the component
 
-function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
+function MenuBuilder({ menus, onMenusChange, personId }: MenuBuilderProps) {
   // Convert incoming menus to ensure ingredients have the right properties
   const convertedMenus = React.useMemo(() => {
     return menus.map(menu => ({
@@ -121,7 +124,7 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
     }));
   }, [menus]);
   const { t } = useTranslation();
-  
+
   // Fetch all menus from the database
   const { data: dbMenus, isLoading: menusLoading, error: menusError } = useQuery<Menu[]>({
     queryKey: ["menus", personId],
@@ -132,7 +135,7 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
     },
     enabled: !!personId,
   });
-  
+
   // Convert database menus to ensure ingredients have the right properties
   const convertedDbMenus = React.useMemo(() => {
     if (!dbMenus || !Array.isArray(dbMenus)) return [];
@@ -151,7 +154,7 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
       } as Ingredient))
     }));
   }, [dbMenus]);
-  
+
   // Combine menus from props and database, removing duplicates
   const allMenus = React.useMemo(() => {
     const propMenuIds = new Set(convertedMenus.map((menu: Menu) => menu.id));
@@ -159,23 +162,23 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
     const uniqueDbMenus = convertedDbMenus.filter((menu: Menu) => !propMenuIds.has(menu.id));
     return [...convertedMenus, ...uniqueDbMenus];
   }, [convertedMenus, convertedDbMenus]);
-  
+
   // Filter unassigned menus
   const unassignedMenus = allMenus.filter(menu => !menu.assignedDay && !menu.assignedMoment);
-  
+
   const [menuName, setMenuName] = useState("");
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [editingIngredientIndex, setEditingIngredientIndex] = useState<number | null>(null);
   const [showEditIngredientSheet, setShowEditIngredientSheet] = useState(false);
-  
+
   // State for editing an existing menu
   const [editingMenu, setEditingMenu] = useState<Menu | null>(null);
   const [showEditMenuSheet, setShowEditMenuSheet] = useState(false);
-  
+
   // State for delete confirmation dialog
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [menuToDelete, setMenuToDelete] = useState<string | null>(null);
-  
+
   // Ref to track the current ingredient being edited in the menu
   const currentEditingMenuIngredientIndex = useRef<number | null>(null);
 
@@ -199,47 +202,47 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
   const [ingredientWeight, setIngredientWeight] = useState<number>(0);
 
   const isDuplicate = Boolean(selectedIngredient && ingredients.some(ing => ing.id === selectedIngredient.id));
-  
+
   // Effect to handle updating menu ingredient when edit sheet closes
   useEffect(() => {
     if (!showEditIngredientSheet && editingMenu && currentEditingMenuIngredientIndex.current !== null && ingredients.length > 0) {
       // Update the ingredient in the menu
       const updatedIngredients = [...(editingMenu.ingredients || [])];
       const idx = currentEditingMenuIngredientIndex.current;
-      
+
       if (idx !== null && idx >= 0 && updatedIngredients[idx] && ingredients[0]) {
         // Ensure weight is a number
         const updatedIngredient: Ingredient = {
           ...ingredients[0],
           weight: typeof ingredients[0].weight === 'number' ? ingredients[0].weight : 0
         };
-        
+
         updatedIngredients[idx] = updatedIngredient;
         setEditingMenu({
           ...editingMenu,
           ingredients: updatedIngredients
         });
       }
-      
+
       // Reset the ref
       currentEditingMenuIngredientIndex.current = null;
     }
   }, [showEditIngredientSheet, editingMenu, ingredients]);
-  
+
   // Function to get the appropriate placeholder based on the ingredient unit or name
   function getUnitPlaceholder(unit?: string | null, ingredientName?: string | null): string {
     // Special case for eggs - they should always be counted in units
     if (ingredientName && ingredientName.toLowerCase().includes('egg')) {
       return 'unit(s)';
     }
-    
+
     // Special case for slices - they should always be counted in slices
     if (ingredientName && ingredientName.toLowerCase().includes('slice')) {
       return 'slice(s)';
     }
-    
+
     if (!unit) return 'g';
-    
+
     switch (unit) {
       case 'GRAM': return 'g';
       case 'ML': return 'ml';
@@ -259,14 +262,14 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
     if (ingredientName && ingredientName.toLowerCase().includes('egg')) {
       return t('units', 'Units');
     }
-    
+
     // Special case for slices - they should always be counted in slices
     if (ingredientName && ingredientName.toLowerCase().includes('slice')) {
       return t('slices', 'Slices');
     }
-    
+
     if (!unit) return t('quantity', 'Quantity');
-    
+
     switch (unit) {
       case 'GRAM': return t('weight', 'Weight');
       case 'ML': return t('volume', 'Volume');
@@ -283,25 +286,25 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
   function addIngredient() {
     if (!selectedIngredient || ingredientWeight <= 0) return;
     if (isDuplicate) return;
-    
+
     // Convert the selected ingredient to our Ingredient type
     const newIngredient = ensureValidIngredient({
       ...selectedIngredient,
       weight: ingredientWeight
     });
-    
+
     // Add the ingredient to the list
     setIngredients(prev => [
       ...prev,
       newIngredient,
     ]);
-    
+
     // Clear the selected ingredient
     setSelectedIngredient(null);
-    
+
     // Reset the ingredient weight
     setIngredientWeight(0);
-    
+
     // Clear the search input by forcing a re-render of the IngredientSearch component
     // This is done by providing a key that changes when we want to reset the component
   }
@@ -313,7 +316,7 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
     setMenuToDelete(id);
     setIsDeleteDialogOpen(true);
   };
-  
+
   // Function to execute delete when confirmed
   const confirmDeleteMenu = () => {
     if (menuToDelete) {
@@ -322,13 +325,13 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
       setMenuToDelete(null);
     }
   };
-  
+
   // Function to cancel delete
   const cancelDeleteMenu = () => {
     setIsDeleteDialogOpen(false);
     setMenuToDelete(null);
   };
-  
+
   const deleteMenuMutation = useMutation({
     mutationFn: async (id: string) => {
       const res = await fetch(`/api/menus?id=${id}`, { method: 'DELETE' });
@@ -376,7 +379,7 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
       toast.error(message || t('menu_save_failed', 'Failed to save menu'));
     },
   });
-  
+
   // Mutation for updating an existing menu
   const updateMenuMutation = useMutation({
     mutationFn: async ({ id, name, category, personId, ingredients }: { id: string; name: string; category: string; personId: string; ingredients: Ingredient[] }) => {
@@ -390,7 +393,7 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
     },
     onSuccess: (updatedMenu: Menu) => {
       // Update the menu in the list
-      const updatedMenus = menus.map(menu => 
+      const updatedMenus = menus.map(menu =>
         menu.id === updatedMenu.id ? updatedMenu : menu
       );
       onMenusChange(updatedMenus);
@@ -432,17 +435,17 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
       ingredients
     });
   }
-  
+
   // Function to handle editing a menu
   function handleEditMenu(menu: Menu) {
     setEditingMenu(menu);
     setShowEditMenuSheet(true);
   }
-  
+
   // Function to save edited menu
   function saveEditedMenu() {
     if (!editingMenu) return;
-    
+
     // Validate the edited menu
     if (!editingMenu.name) {
       toast.error(t('enter_menu_name', 'Please enter a menu name.'));
@@ -456,7 +459,7 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
       toast.error(t('add_at_least_one_ingredient', 'Please add at least one ingredient.'));
       return;
     }
-    
+
     // Ensure all ingredients have the required properties
     const validatedIngredients = editingMenu.ingredients.map(ing => ({
       ...ing,
@@ -467,7 +470,7 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
       fat: typeof ing.fat === 'number' ? ing.fat : 0,
       weight: typeof ing.weight === 'number' ? ing.weight : 0
     } as Ingredient));
-    
+
     updateMenuMutation.mutate({
       id: editingMenu.id,
       name: editingMenu.name,
@@ -483,17 +486,6 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
       <div className="rounded-lg border border-border p-4 bg-card text-card-foreground shadow-sm">
         <h3 className="font-medium mb-2">{t('new_menu', 'New Menu')}</h3>
         <div className="space-y-4">
-          <div>
-            <label htmlFor="menu-name" className="block text-sm font-medium mb-1">
-              {t('name', 'Name')}
-            </label>
-            <Input
-              id="menu-name"
-              value={menuName}
-              onChange={e => setMenuName(e.target.value)}
-              placeholder={t('menu_name_placeholder', 'Enter menu name')}
-            />
-          </div>
           <div>
             <label htmlFor="category" className="block text-sm font-medium mb-1">
               {t('category', 'Category')}
@@ -516,8 +508,8 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
             <label htmlFor="ingredients" className="block text-sm font-medium mb-1">
               {t('ingredients', 'Ingredients')}
             </label>
-            <div className="flex items-start gap-2 mb-1">
-              <div className="flex-1">
+            <div className="flex flex-col sm:flex-row items-start gap-2 mb-1">
+              <div className="w-full">
                 <IngredientSearch
                   key={`ingredient-search-${ingredients.length}`} // Add a key that changes when ingredients are added
                   onIngredientSelect={(ingredient) => setSelectedIngredient(ingredient)}
@@ -525,34 +517,38 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
                   placeholder={t('search_ingredients', 'Search ingredients')}
                 />
               </div>
-              <div className="w-24">
-                <Input
-                  type="number"
-                  value={ingredientWeight || ''}
-                  onChange={e => setIngredientWeight(parseInt(e.target.value) || 0)}
-                  placeholder={getUnitPlaceholder(selectedIngredient?.unit)}
-                  disabled={!selectedIngredient}
-                />
+              <div className="flex w-full">
+                <div className="w-1/2 sm:w-24">
+                  <Input
+                    type="number"
+                    value={ingredientWeight || ''}
+                    onChange={e => setIngredientWeight(parseInt(e.target.value) || 0)}
+                    placeholder={getUnitPlaceholder(selectedIngredient?.unit)}
+                    disabled={!selectedIngredient}
+                  />
+                </div>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      type="button"
+                      onClick={addIngredient}
+                      disabled={!selectedIngredient || ingredientWeight <= 0 || isDuplicate}
+                      size="icon"
+                      className="ml-2"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {t('add_ingredient', 'Add ingredient')}
+                  </TooltipContent>
+                </Tooltip>
               </div>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    onClick={addIngredient}
-                    disabled={!selectedIngredient || ingredientWeight <= 0 || isDuplicate}
-                    size="icon"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  {t('add_ingredient', 'Add ingredient')}
-                </TooltipContent>
-              </Tooltip>
+
             </div>
             {isDuplicate && (
               <div className="text-destructive text-sm mt-1 flex items-center gap-1" role="alert">
-                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" aria-hidden="true"><path stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01m-6.938 2h13.856c1.54 0 2.502-1.667 1.732-3L13.732 5c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" aria-hidden="true"><path stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01m-6.938 2h13.856c1.54 0 2.502-1.667 1.732-3L13.732 5c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                 {t('ingredient_already_in_list', 'This ingredient is already on the list.')}
               </div>
             )}
@@ -598,12 +594,12 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
                     const baseAmount = ing.unit === 'GRAM' || ing.unit === 'ML' ? 100 : 1;
                     const weight = typeof ing.weight === 'number' ? ing.weight : 0;
                     const multiplier = weight / baseAmount;
-                    
+
                     // Calculate the scaled nutrition values
                     const scaledCarbs = (ing.carbs * multiplier).toFixed(1);
                     const scaledProtein = (ing.protein * multiplier).toFixed(1);
                     const scaledFat = (ing.fat * multiplier).toFixed(1);
-                    
+
                     return `${scaledCarbs}g ${t('carbs', 'carbs')}, ${scaledProtein}g ${t('protein', 'protein')}, ${scaledFat}g ${t('fat', 'fat')}`;
                   })()}
                 </span>
@@ -621,9 +617,9 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
         <h3 className="font-medium mb-2">{t('unassigned_menus', 'Unassigned Menus')} ({unassignedMenus.length})</h3>
         <Droppable droppableId="unassigned" type="menu">
           {(provided, snapshot) => (
-            <div 
+            <div
               {...provided.droppableProps}
-              ref={provided.innerRef} 
+              ref={provided.innerRef}
               className={`border rounded-lg p-4 bg-muted/50 min-h-[120px] transition-all grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 ${snapshot.isDraggingOver ? 'ring-2 ring-primary' : ''}`}
             >
               {menusLoading ? (
@@ -646,7 +642,7 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
                           zIndex: snapshot.isDragging ? 100 : 'auto',
                           // Set fixed width when dragging to match day columns
                           ...(snapshot.isDragging ? {
-                            width: '180px', 
+                            width: '180px',
                             maxWidth: '180px'
                           } : {})
                         }}
@@ -659,9 +655,9 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
                           )}
                           <div className="flex gap-1">
                             {/* Edit button */}
-                            <Button 
-                              size="icon" 
-                              variant="ghost" 
+                            <Button
+                              size="icon"
+                              variant="ghost"
                               className="h-6 w-6 text-primary hover:bg-primary/10"
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -671,9 +667,9 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
                               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
                             </Button>
                             {/* Delete button */}
-                            <Button 
-                              size="icon" 
-                              variant="ghost" 
+                            <Button
+                              size="icon"
+                              variant="ghost"
                               className="h-6 w-6 text-destructive hover:bg-destructive/10"
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -704,7 +700,7 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
           )}
         </Droppable>
       </div>
-      
+
       {/* Edit Ingredient Sheet */}
       <Sheet open={showEditIngredientSheet} onOpenChange={setShowEditIngredientSheet}>
         <SheetContent className="px-6">
@@ -731,7 +727,7 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
                             unit: ingredient.unit || newIngredients[editingIngredientIndex].unit
                           });
                           setIngredients(newIngredients);
-                          
+
                           // Force a re-render to update the label
                           setEditingIngredientIndex(prevIndex => {
                             if (prevIndex !== null) {
@@ -778,7 +774,7 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
             <SheetClose asChild>
               <Button variant="outline">{t('cancel', 'Cancel')}</Button>
             </SheetClose>
-            <Button 
+            <Button
               onClick={() => {
                 // Validate ingredients before closing
                 z.array(LocalIngredientSchema).safeParse(ingredients);
@@ -791,7 +787,7 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
           </SheetFooter>
         </SheetContent>
       </Sheet>
-      
+
       {/* Edit Menu Sheet */}
       <Sheet open={showEditMenuSheet} onOpenChange={setShowEditMenuSheet}>
         <SheetContent className="sm:max-w-md md:max-w-lg px-6">
@@ -800,25 +796,14 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
           </SheetHeader>
           <div className="py-4 space-y-4">
             {editingMenu && (
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="edit-menu-name" className="block text-sm font-medium mb-1">
-                    {t('name', 'Name')}
-                  </label>
-                  <Input
-                    id="edit-menu-name"
-                    value={editingMenu.name}
-                    onChange={e => setEditingMenu({...editingMenu, name: e.target.value})}
-                    placeholder={t('menu_name_placeholder', 'Enter menu name')}
-                  />
-                </div>
+              <div className="space-y-4 w-full">
                 <div>
                   <label htmlFor="edit-category" className="block text-sm font-medium mb-1">
                     {t('category', 'Category')}
                   </label>
-                  <Select 
-                    value={editingMenu.category || ''} 
-                    onValueChange={value => setEditingMenu({...editingMenu, category: value})}
+                  <Select
+                    value={editingMenu.category || ''}
+                    onValueChange={value => setEditingMenu({ ...editingMenu, category: value })}
                   >
                     <SelectTrigger id="edit-category">
                       <SelectValue placeholder={t('select_category', 'Select category')} />
@@ -836,8 +821,8 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
                   <label className="block text-sm font-medium mb-1">
                     {t('ingredients', 'Ingredients')}
                   </label>
-                  <div className="flex items-start gap-2 mb-1">
-                    <div className="flex-1">
+                  <div className="flex flex-col sm:flex-row items-start gap-2 mb-1">
+                    <div className="flex-1 w-full">
                       <IngredientSearch
                         key={`edit-ingredient-search-${editingMenu.ingredients?.length || 0}`}
                         onIngredientSelect={(ingredient) => setSelectedIngredient(ingredient)}
@@ -845,49 +830,53 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
                         placeholder={t('search_ingredients', 'Search ingredients')}
                       />
                     </div>
-                    <div className="w-24">
-                      <Input
-                        type="number"
-                        value={ingredientWeight || ''}
-                        onChange={e => setIngredientWeight(parseInt(e.target.value) || 0)}
-                        placeholder={getUnitPlaceholder(selectedIngredient?.unit, selectedIngredient?.name)}
-                        disabled={!selectedIngredient}
-                      />
+                    <div className="flex w-full">
+                      <div className="w-full">
+                        <Input
+                          type="number"
+                          value={ingredientWeight || ''}
+                          onChange={e => setIngredientWeight(parseInt(e.target.value) || 0)}
+                          placeholder={getUnitPlaceholder(selectedIngredient?.unit, selectedIngredient?.name)}
+                          disabled={!selectedIngredient}
+                        />
+                      </div>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            type="button"
+                            onClick={() => {
+                              if (!selectedIngredient || ingredientWeight <= 0 || isDuplicate || !editingMenu) return;
+
+                              // Add the ingredient to the menu's ingredients list with proper type
+                              const newIngredient = ensureValidIngredient({
+                                ...selectedIngredient,
+                                weight: ingredientWeight
+                              });
+
+                              setEditingMenu({
+                                ...editingMenu,
+                                ingredients: [...(editingMenu.ingredients || []), newIngredient]
+                              });
+
+                              // Clear the selected ingredient
+                              setSelectedIngredient(null);
+
+                              // Reset the ingredient weight
+                              setIngredientWeight(0);
+                            }}
+                            disabled={!selectedIngredient || ingredientWeight <= 0 || isDuplicate}
+                            size="icon"
+                            className="ml-2"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {t('add_ingredient', 'Add ingredient')}
+                        </TooltipContent>
+                      </Tooltip>
                     </div>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          type="button"
-                          onClick={() => {
-                            if (!selectedIngredient || ingredientWeight <= 0 || isDuplicate || !editingMenu) return;
-                            
-                            // Add the ingredient to the menu's ingredients list with proper type
-                            const newIngredient = ensureValidIngredient({
-                              ...selectedIngredient,
-                              weight: ingredientWeight
-                            });
-                            
-                            setEditingMenu({
-                              ...editingMenu,
-                              ingredients: [...(editingMenu.ingredients || []), newIngredient]
-                            });
-                            
-                            // Clear the selected ingredient
-                            setSelectedIngredient(null);
-                            
-                            // Reset the ingredient weight
-                            setIngredientWeight(0);
-                          }}
-                          disabled={!selectedIngredient || ingredientWeight <= 0 || isDuplicate}
-                          size="icon"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        {t('add_ingredient', 'Add ingredient')}
-                      </TooltipContent>
-                    </Tooltip>
+
                   </div>
                 </div>
                 <ul className="list-disc ml-6 mt-2 text-sm">
@@ -916,7 +905,7 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
                               setIngredients(tempIngredients);
                               setEditingIngredientIndex(0);
                               setShowEditIngredientSheet(true);
-                              
+
                               // Store the current ingredient index for reference
                               currentEditingMenuIngredientIndex.current = idx;
                             }
@@ -950,12 +939,12 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
                             const baseAmount = ing.unit === 'GRAM' || ing.unit === 'ML' ? 100 : 1;
                             const weight = typeof ing.weight === 'number' ? ing.weight : 0;
                             const multiplier = weight / baseAmount;
-                            
+
                             // Calculate the scaled nutrition values
                             const scaledCarbs = (ing.carbs * multiplier).toFixed(1);
                             const scaledProtein = (ing.protein * multiplier).toFixed(1);
                             const scaledFat = (ing.fat * multiplier).toFixed(1);
-                            
+
                             return `${scaledCarbs}g ${t('carbs', 'carbs')}, ${scaledProtein}g ${t('protein', 'protein')}, ${scaledFat}g ${t('fat', 'fat')}`;
                           })()}
                         </span>
@@ -970,7 +959,7 @@ function MenuBuilder({ menus, onMenusChange, personId}: MenuBuilderProps) {
             <SheetClose asChild>
               <Button variant="outline">{t('cancel', 'Cancel')}</Button>
             </SheetClose>
-            <Button 
+            <Button
               onClick={saveEditedMenu}
               disabled={updateMenuMutation.isPending}
             >

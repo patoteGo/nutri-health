@@ -5,7 +5,10 @@ import { useTranslation } from "react-i18next";
 import { Card } from "../ui/card";
 
 // Helper function to get the appropriate unit abbreviation
-function getUnitAbbreviation(ingredient: any): string {
+import type { Ingredient as IngredientType } from "@/lib/types";
+
+// Helper function to get the appropriate unit abbreviation
+function getUnitAbbreviation(ingredient: Partial<IngredientType>): string {
   // Special case for eggs - they should always be counted in units
   if (ingredient.name && ingredient.name.toLowerCase().includes('egg')) {
     return 'u';
