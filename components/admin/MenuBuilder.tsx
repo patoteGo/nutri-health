@@ -703,7 +703,7 @@ function MenuBuilder({ menus, onMenusChange, personId }: MenuBuilderProps) {
 
       {/* Edit Ingredient Sheet */}
       <Sheet open={showEditIngredientSheet} onOpenChange={setShowEditIngredientSheet}>
-        <SheetContent className="px-6">
+        <SheetContent className="px-6 block sm:flex">
           <SheetHeader>
             <SheetTitle>{t('edit_ingredient', 'Edit Ingredient')}</SheetTitle>
           </SheetHeader>
@@ -790,7 +790,7 @@ function MenuBuilder({ menus, onMenusChange, personId }: MenuBuilderProps) {
 
       {/* Edit Menu Sheet */}
       <Sheet open={showEditMenuSheet} onOpenChange={setShowEditMenuSheet}>
-        <SheetContent className="sm:max-w-md md:max-w-lg px-6">
+        <SheetContent className="sm:max-w-md md:max-w-lg px-6 block sm:flex">
           <SheetHeader>
             <SheetTitle>{t('edit_menu', 'Edit Menu')}</SheetTitle>
           </SheetHeader>
@@ -830,7 +830,7 @@ function MenuBuilder({ menus, onMenusChange, personId }: MenuBuilderProps) {
                         placeholder={t('search_ingredients', 'Search ingredients')}
                       />
                     </div>
-                    <div className="flex w-full">
+                    <div className="flex sm:w-1/4">
                       <div className="w-full">
                         <Input
                           type="number"
