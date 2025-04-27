@@ -22,74 +22,107 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  name      String?
-  picture   String?  // URL to Google profile picture
-  isAdmin   Boolean  @default(false)
-  gender    String?
-  birthDate  DateTime?
+  id             String           @id @default(uuid())
+  email          String           @unique
+  name           String?
+  picture        String? // URL to Google profile picture
+  isAdmin        Boolean          @default(false)
+  gender         String?
+  birthDate      DateTime?
   /// First day of the week for this user (e.g., MONDAY)
-  firstDayOfWeek Weekday @default(MONDAY)
+  firstDayOfWeek Weekday          @default(MONDAY)
   /// Days of the week the user will do the diet
-  weekDays Weekday[]
-  meals     Meal[]
-  weeklyPlans WeeklyMealPlan[]
-  healthInfo UserHealthInfo[]
+  weekDays       Weekday[]
+  meals          Meal[]
+  weeklyPlans    WeeklyMealPlan[]
+  healthInfo     UserHealthInfo[]
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
 }
 
 model UserHealthInfo {
-  id        String  @id @default(uuid())
-  user      User    @relation(fields: [userId], references: [id])
-  userId    String  @unique
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String   @unique
   fat       Float?
   muscle    Float?
   weight    Float?
   height    Float?
   basal     Float? // Basal metabolic rate
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
   // Add other basic health info fields here as needed
 }
 
 model Ingredient {
-  id      String         @id @default(uuid())
-  name    String         @unique
-  carbs   Float          // grams per 100g or per unit
-  protein Float          // grams per 100g or per unit
-  fat     Float          // grams per 100g or per unit
-  unit    IngredientUnit @default(GRAM) // how this ingredient is measured (GRAM, UNIT, ML, etc)
-  imageUrl String?       // URL to an image of the ingredient
-  searchTerms String[]   @default([]) // Array of search terms in multiple languages
+  id                     String                   @id @default(uuid())
+  name                   String                   @unique
+  carbs                  Float // grams per 100g or per unit
+  protein                Float // grams per 100g or per unit
+  fat                    Float // grams per 100g or per unit
+  fiber                  Float // grams per 100g or per unit
+  calories               Float // calories per 100g or per unit
+  unit                   IngredientUnit           @default(GRAM) // how this ingredient is measured (GRAM, UNIT, ML, etc)
+  imageUrl               String? // URL to an image of the ingredient
+  searchTerms            String[]                 @default([]) // Array of search terms in multiple languages
+  IngredientWithQuantity IngredientWithQuantity[]
   // Optionally: fiber, calories, etc.
   // If needed, add a conversionFactor field for custom conversions.
 }
 
+model IngredientWithQuantity {
+  id           String     @id @default(uuid())
+  ingredient   Ingredient @relation(fields: [ingredientId], references: [id])
+  ingredientId String
+  quantity     Float
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  Meal         Meal[]
+
+  @@unique([ingredientId, quantity])
+}
+
 model Meal {
-  id          String   @id @default(uuid())
-  user        User     @relation(fields: [userId], references: [id])
-  userId      String
-  date        DateTime
-  mealMoment   MealMoment   @relation(fields: [mealMomentId], references: [id])
-  mealMomentId Int
-  parts       Json     // Array of meal parts: [{ name, grams, imageUrl }]
+  id                     String                   @id @default(uuid())
+  user                   User                     @relation(fields: [userId], references: [id])
+  userId                 String
+  IngredientWithQuantity IngredientWithQuantity[]
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime                 @updatedAt
+  MealInDay              MealInDay[]
+}
+
+model MealInDay {
+  id               String          @id @default(uuid())
+  meal             Meal            @relation(fields: [mealId], references: [id])
+  mealId           String
+  mealMoment       MealMoment      @relation(fields: [mealMomentId], references: [id])
+  mealMomentId     Int
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  WeeklyMealPlan   WeeklyMealPlan[]
 }
 
 model MealMoment {
-  id          Int      @id @default(autoincrement())
-  name        String   @unique
-  timeInDay   String   // e.g., "08:00" or "Morning"
+  id          Int         @id @default(autoincrement())
+  name        String      @unique
+  timeInDay   String // e.g., "08:00" or "Morning"
   description String?
-  meals       Meal[]   // Relation to Meal
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  MealInDay   MealInDay[]
 }
 
 model WeeklyMealPlan {
-  id        String   @id @default(uuid())
-  user      User     @relation(fields: [userId], references: [id])
-  name      String
-  userId    String
-  weekStart DateTime // Monday of the week
-  meals     Json     // { [day: string]: { [moment: string]: MealData } }
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String      @id @default(uuid())
+  user       User        @relation(fields: [userId], references: [id])
+  name       String
+  userId     String
+  weekStart  DateTime // Monday of the week
+  // meals     Json // { [day: string]: { [moment: string]: MealData } }
+  mealsInDay MealInDay[]
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
 
   @@unique([userId, weekStart], name: "userId_weekStart")
 }
@@ -106,6 +139,3 @@ enum IngredientUnit {
   CUP
   PIECE
 }
-
-
-
